@@ -25,13 +25,19 @@ function SignUpPage({ theme, onSwitchToLogin }) {
 
     setIsSubmitting(true)
     setStatus({ type: 'idle', message: '' })
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin },
     })
-    if (error) setStatus({ type: 'error', message: error.message })
-    else setStatus({ type: 'success', message: 'Semak emel untuk pengesahan, kemudian log masuk.' })
+    if (error) {
+      setStatus({ type: 'error', message: error.message })
+    } else if (data.session) {
+      // "Confirm email" is off: signUp already returns a session, App.jsx will switch to the pending-approval screen.
+      setStatus({ type: 'success', message: 'Pendaftaran berjaya. Menunggu kelulusan admin.' })
+    } else {
+      setStatus({ type: 'success', message: 'Semak emel untuk pengesahan, kemudian log masuk.' })
+    }
     setIsSubmitting(false)
   }
 

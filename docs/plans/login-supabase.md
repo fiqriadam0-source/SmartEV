@@ -12,7 +12,7 @@ All the code for phases 0-2 is written and committed to this repo. The remaining
 1. **Run the migration.** Supabase dashboard → **SQL Editor** → paste all of [../../supabase/migrations/0001_auth_profiles.sql](../../supabase/migrations/0001_auth_profiles.sql) → **Run**.
 2. **Redeploy the backend.** Paste the current [../../backend/stock.gs](../../backend/stock.gs) into the Apps Script project bound to the Google Sheet → **Deploy → Manage deployments** → edit (pencil) the existing deployment → **New version** → **Deploy**. This keeps the `/exec` URL unchanged. Skipping this step is why `getStock` currently fails with a CORS error locally: the live script predates the `getStock`/`getUsageHistory` handlers.
 3. **Set Apps Script Script Properties** (same project → ⚙️ Project Settings → Script Properties): `AUTH_MODE=off`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (same public values as `.env.local`, not secrets).
-4. **Create the first admin.** Sign up once through the app, confirm the email, then in the Supabase SQL Editor: `update public.profiles set role = 'admin', status = 'active', approved_at = now() where email = '<you@example.com>';`
+4. **Create the first admin.** Sign up once through the app (no email confirmation needed with it off), then in the Supabase SQL Editor: `update public.profiles set role = 'admin', status = 'active', approved_at = now() where email = '<you@example.com>';`
 5. **Vercel env vars.** Project Settings → Environment Variables → add `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and update `VITE_API_URL` if it changed → redeploy.
 6. **Supabase Auth → URL Configuration.** Set **Site URL** to the production Vercel domain, and add it (plus the Vercel preview pattern) to **Redirect URLs**. Needed for email confirmation links to land back on the right domain.
 
@@ -87,7 +87,7 @@ Alternatives considered:
 ### Dashboard configuration
 
 1. Create the project. Copy the **Project URL** and the **publishable key** (formerly the "anon" key). Both are safe to expose. Never use the secret / `service_role` key in the frontend or in Apps Script; nothing in this plan needs it.
-2. **Authentication → Providers → Email:** enabled, **Confirm email: on**.
+2. **Authentication → Providers → Email:** enabled, **Confirm email: off**. The free-tier built-in email sender is rate-limited (a few emails/hour) and meant for testing only; admin approval in `#users` is the real access gate, so email verification isn't needed. Revisit (turn it on, with Custom SMTP) before onboarding real users at volume.
 3. **Authentication → URL Configuration:**
    - Site URL: the production Vercel URL.
    - Redirect URLs: `http://localhost:5173/**`, `https://<production-domain>/**`, and the Vercel preview pattern (`https://*-<team>.vercel.app/**`) if previews should work.
@@ -181,7 +181,7 @@ revoke execute on function public.admin_set_access(uuid, public.app_role, public
 revoke execute on function public.get_my_access() from anon;
 ```
 
-**First admin (bootstrap).** Sign up normally, confirm the email, then run in the SQL editor:
+**First admin (bootstrap).** Sign up normally, then run in the SQL editor:
 
 ```sql
 update public.profiles set role = 'admin', status = 'active', approved_at = now() where email = '<you@example.com>';
@@ -215,7 +215,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 
 Auth flows:
 
-- **Sign up:** `signUp({ email, password, options: { data: { full_name }, emailRedirectTo: <site url> } })` → screen says "Semak emel untuk pengesahan". After the user confirms and logs in, they see the pending screen.
+- **Sign up:** `signUp({ email, password, options: { data: { full_name }, emailRedirectTo: <site url> } })`. With Confirm email off, `signUp` returns a session immediately and the user lands straight on the pending screen; if Confirm email is ever turned back on, the screen falls back to "Semak emel untuk pengesahan" until they confirm and log in.
 - **Password reset:** `resetPasswordForEmail(email, { redirectTo })` → user opens the link → the `PASSWORD_RECOVERY` auth event shows `ResetPasswordPage` → `updateUser({ password })`.
 - **Pending screen:** a "Semak semula" button calls `refreshProfile()`, so an approved user gets in without logging out.
 
@@ -253,7 +253,7 @@ New Script Properties: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `AUTH_MODE` (
 
 ## Test checklist
 
-- [ ] Sign up → confirmation email arrives → confirm → login shows pending screen, and no data loads.
+- [ ] Sign up → lands directly on the pending screen (no data loads) since Confirm email is off.
 - [ ] Admin approves as staff → user presses "Semak semula" → sees Usage and Stock, but not Restok, Telegram or Pengguna.
 - [ ] Staff calling the backend directly with `action=restock` (using their own token) gets `Error: FORBIDDEN`.
 - [ ] Storekeeper can restock; admin can do everything and manage users.
