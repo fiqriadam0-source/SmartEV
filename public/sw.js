@@ -31,8 +31,15 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  const url = new URL(request.url);
 
   if (request.method !== "GET") {
+    return;
+  }
+
+  // External Apps Script endpoints must be left alone. The SW should not cache or
+  // intercept API calls because they are cross-origin and may fail during deploy or auth checks.
+  if (url.origin === "https://script.google.com") {
     return;
   }
 
@@ -55,7 +62,6 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Vite build assets have hashed file names, so cache first is safe.
-  const url = new URL(request.url);
   const isSameOriginAsset =
     url.origin === self.location.origin &&
     /\.(?:css|js|mjs|json|svg|png|jpg|jpeg|webp|ico|webmanifest)$/i.test(url.pathname);
@@ -84,6 +90,10 @@ self.addEventListener("fetch", (event) => {
         caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
         return response;
       })
-      .catch(() => caches.match(request))
+      .catch(async () => {
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) return cachedResponse;
+        return Response.error();
+      })
   );
 });
