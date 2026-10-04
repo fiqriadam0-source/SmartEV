@@ -233,7 +233,8 @@ function doGet(e) {
       material  : data[i][2],
       kuantiti  : data[i][3],
       unit      : data[i][4],
-      tujuan    : data[i][5]
+      tujuan    : data[i][5],
+      saiz      : String(data[i][6] || "").trim()
     });
   }
 
@@ -249,19 +250,43 @@ function doGet(e) {
   if (e.parameter.action === "getStock") {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stock");
     const data = sheet.getDataRange().getValues();
-    var stock = [];
+    var stockMap = {};
 
     for (var i = 1; i < data.length; i++) {
-      var materialName = String(data[i][0] || "").trim();
-      if (!materialName) continue;
+      var rawMaterial = String(data[i][0] || "").trim();
+      if (!rawMaterial) continue;
 
-      stock.push({
-        material: materialName,
-        saiz: String(data[i][5] || "").trim(),
-        baki: data[i][3],
-        minimum: data[i][4]
-      });
+      var materialInfo = splitMaterialLabel(rawMaterial);
+      var materialName = (materialInfo.material || rawMaterial).trim();
+      var size = String(data[i][5] || "").trim() || (materialInfo.size || "").trim();
+      var baki = Number(data[i][3]) || 0;
+      var minimum = Number(data[i][4]) || 0;
+      var key = (materialName + "::" + size).toLowerCase();
+
+      if (!stockMap[key]) {
+        stockMap[key] = {
+          material: materialName,
+          saiz: size,
+          baki: baki,
+          minimum: minimum
+        };
+        continue;
+      }
+
+      if (baki > Number(stockMap[key].baki)) {
+        stockMap[key].baki = baki;
+      }
+      if (minimum > Number(stockMap[key].minimum)) {
+        stockMap[key].minimum = minimum;
+      }
+      if (!stockMap[key].saiz && size) {
+        stockMap[key].saiz = size;
+      }
     }
+
+    var stock = Object.keys(stockMap).map(function (key) {
+      return stockMap[key];
+    });
 
     return ContentService.createTextOutput(JSON.stringify(stock))
              .setMimeType(ContentService.MimeType.JSON);
@@ -422,7 +447,7 @@ function doPost(e) {
           stockSheet.getRange(i + 1, 3).setValue(stokDigunakan);
           stockSheet.getRange(i + 1, 4).setValue(baki);
 
-          usageSheet.appendRow([timestamp, nama, materialName, kuantiti, unit, tujuan]);
+          usageSheet.appendRow([timestamp, nama, materialName, kuantiti, unit, tujuan, targetSize || ""]);
 
           if (baki <= 10 && baki > 0) {
             sendTelegramAlert(materialName + (targetSize ? " (" + targetSize + ")" : ""), baki);
@@ -483,12 +508,12 @@ function sendTelegram(text, parseMode) {
   }
 }
 
-function sendTelegramUsage(nama, material, kuantiti, unit, tujuan) {
+function sendTelegramUsage(nama, material, kuantiti, unit, tujuan, saiz) {
   var msg = "📦 Material Dipinjam\n" +
             "👤 Nama: " + nama + "\n" +
-            "📦 Material: " + material + "\n" +
-            "🔢 Kuantiti: " + kuantiti + 
-            (unit ? "unit " + unit : "") + "\n" +   // Tambah unit di sini
+            "📦 Material: " + material + (saiz ? " (" + saiz + ")" : "") + "\n" +
+            "🔢 Kuantiti: " + kuantiti +
+            (unit ? " " + unit : "") + "\n" +
             "📍 Tujuan: " + tujuan;
 
   try {
@@ -563,10 +588,11 @@ function sendTelegramUsageMulti(nama, tujuan, items) {
 
   items.forEach(function(item) {
     var unitText = item.unit ? " " + item.unit : "";
-    msg += "• " + item.material + " → " + item.kuantiti + unitText + "\n";
+    var sizeText = item.saiz ? " (" + item.saiz + ")" : "";
+    msg += "• " + item.material + sizeText + " → " + item.kuantiti + unitText + "\n";
   });
 
-  msg += "\nJumlah barang: " + items.length + "\n⏰ " + new Date().toLocaleString('ms-MY');
+  msg += "\nJumlah barang: " + items.length + "\n📌 Rekod terbaru: " + new Date().toLocaleString('ms-MY');
 
   try {
     sendTelegram(msg);

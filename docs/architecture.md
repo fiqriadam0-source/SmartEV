@@ -23,7 +23,7 @@ There is no server of our own. The Apps Script web app is the only backend and t
 | `src/pages/UsagePage.jsx` | Material usage form: multiple rows, live balance lookup (debounced, per-row request counters), usage history |
 | `src/pages/RestockPage.jsx` | Restock form + stock side panel |
 | `src/pages/StockPage.jsx` | Full stock grid |
-| `src/pages/TelegramPage.jsx` | Manual Telegram message, sent through the backend |
+| `src/pages/TelegramPage.jsx` | Usage history view with size and newest item indicator; the old manual Telegram sender is no longer the primary flow |
 | `src/components/` | `MaterialCombobox`, `StockList`, `StatusMessage` |
 | `src/hooks/useRemoteData.js` | Load-on-mount + `reload()`; loaders must be stable module-level functions |
 | `src/hooks/useInstallPrompt.js` | Add to Home Screen banner (native prompt / iOS instructions) |
@@ -62,7 +62,7 @@ Constraints that shape the frontend:
 | Sheet | Columns |
 | --- | --- |
 | `Stock` | A bahan, B stok awal, C digunakan, D baki, E minimum, F saiz |
-| `MaterialUsage` | tarikh, nama, material, kuantiti, unit, tujuan |
+| `MaterialUsage` | tarikh, nama, material, kuantiti, unit, tujuan, saiz |
 | `Restock` | tarikh, material, kuantiti, saiz |
 
 A material can have several rows in `Stock`, one per size (column F).

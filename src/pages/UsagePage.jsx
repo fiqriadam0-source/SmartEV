@@ -60,6 +60,8 @@ function normalizeHistoryRows(payload) {
           material: String(row[2] ?? '').trim(),
           qty: String(row[3] ?? '').trim(),
           unit: String(row[4] ?? '').trim(),
+          saiz: String(row[6] ?? '').trim(),
+          tujuan: String(row[5] ?? '').trim(),
         }
       }
       if (row && typeof row === 'object') {
@@ -69,6 +71,8 @@ function normalizeHistoryRows(payload) {
           material: String(row.material ?? row.item ?? '').trim(),
           qty: String(row.kuantiti ?? row.quantity ?? row.qty ?? '').trim(),
           unit: String(row.unit ?? '').trim(),
+          saiz: String(row.saiz ?? row.size ?? row.saiz_material ?? '').trim(),
+          tujuan: String(row.tujuan ?? row.purpose ?? '').trim(),
         }
       }
       return null
@@ -463,9 +467,22 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         ) : (
           <div className="max-h-[32rem] space-y-2 overflow-y-auto pr-1">
             {usageHistory.map((row, index) => (
-              <div key={`${row.date}-${row.name}-${row.material}-${index}`} className={`rounded-xl border p-3 text-sm ${theme.sideItem}`}>
+              <div
+                key={`${row.date}-${row.name}-${row.material}-${index}`}
+                className={`rounded-xl border p-3 text-sm ${index === 0 ? 'border-emerald-300 bg-emerald-50/80' : theme.sideItem}`}
+              >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-bold leading-tight">{row.material || '-'}</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold leading-tight">{row.material || '-'}</p>
+                      {index === 0 && (
+                        <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                          Terbaharu
+                        </span>
+                      )}
+                    </div>
+                    {row.saiz && <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Saiz: {row.saiz}</p>}
+                  </div>
                   <span className="shrink-0 font-bold">
                     {row.qty || '-'} {row.unit}
                   </span>
@@ -473,6 +490,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
                 <p className="mt-1 text-xs opacity-70">
                   {row.name || '-'} · {row.date || '-'}
                 </p>
+                {row.tujuan && <p className="mt-1 text-[11px] opacity-70">Tujuan: {row.tujuan}</p>}
               </div>
             ))}
           </div>

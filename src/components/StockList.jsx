@@ -2,13 +2,44 @@
 function StockList({ stock, isLoading, error, theme, variant = 'compact' }) {
   if (isLoading) return <p className="text-sm opacity-70">Sedang memuatkan stock...</p>
   if (error) return <p className="text-sm text-rose-300">{error}</p>
-  if (stock.length === 0) return <p className="text-sm opacity-70">Tiada data stock.</p>
+
+  const normalizedStock = Array.isArray(stock)
+    ? stock.reduce((accumulator, item) => {
+        const materialName = String(item.material || '').trim()
+        const sizeName = String(item.saiz || '').trim()
+        if (!materialName) return accumulator
+
+        const key = `${materialName.toLowerCase()}::${sizeName.toLowerCase()}`
+        const nextItem = {
+          material: materialName,
+          saiz: sizeName,
+          baki: Number(item.baki) || 0,
+          minimum: Number(item.minimum) || 0,
+        }
+
+        if (!accumulator[key]) {
+          accumulator[key] = nextItem
+          return accumulator
+        }
+
+        if (nextItem.baki > accumulator[key].baki) {
+          accumulator[key].baki = nextItem.baki
+        }
+        if (nextItem.minimum > accumulator[key].minimum) {
+          accumulator[key].minimum = nextItem.minimum
+        }
+        return accumulator
+      }, {})
+    : {}
+
+  const rows = Object.values(normalizedStock)
+  if (rows.length === 0) return <p className="text-sm opacity-70">Tiada data stock.</p>
 
   const isGrid = variant === 'grid'
 
   return (
     <div className={isGrid ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'max-h-96 space-y-3 overflow-y-auto pr-1'}>
-      {stock.map((item, index) => {
+      {rows.map((item, index) => {
         const isLow = Number(item.baki) <= Number(item.minimum)
         return (
           <div

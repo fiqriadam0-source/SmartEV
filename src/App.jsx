@@ -18,7 +18,7 @@ const PAGES = [
   { id: 'usage', label: 'Penggunaan Material', icon: '🧰' },
   { id: 'restock', label: 'Restok', icon: '📦' },
   { id: 'stock', label: 'Senarai Stock', icon: '📋' },
-  { id: 'telegram', label: 'Telegram Sender', icon: '✈️' },
+  { id: 'telegram', label: 'History Usage', icon: '🕘' },
   { id: 'users', label: 'Pengguna', icon: '👤' },
 ]
 
