@@ -46,8 +46,11 @@ export async function apiPost(fields) {
 
 async function getArray(action, errorMessage) {
   const data = await apiGet(action)
-  if (!Array.isArray(data)) throw new Error(errorMessage)
-  return data
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object' && data.error) {
+    throw new Error(String(data.error))
+  }
+  throw new Error(errorMessage)
 }
 
 export const fetchMaterials = async () => cleanList(await getArray('getMaterials', 'Format material tidak sah'))

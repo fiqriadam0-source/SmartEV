@@ -216,34 +216,37 @@ function doGet(e) {
   }
 
   if (e.parameter.action === "getUsageHistory") {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MaterialUsage");
-  const data = sheet.getDataRange().getValues();
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MaterialUsage");
+    const data = sheet.getDataRange().getValues();
 
-  if (data.length <= 1) {
-    return ContentService.createTextOutput(JSON.stringify([]))
+    if (data.length <= 1) {
+      return ContentService.createTextOutput(JSON.stringify([]))
+               .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var history = [];
+
+    for (var i = 1; i < data.length; i++) {
+      var materialLabel = String(data[i][2] || "").trim();
+      var materialInfo = splitMaterialLabel(materialLabel);
+      var rowSize = String(data[i][6] || "").trim() || (materialInfo.size || "").trim();
+
+      history.push({
+        timestamp : data[i][0] ? new Date(data[i][0]).toLocaleString('ms-MY') : "",
+        nama      : data[i][1],
+        material  : materialInfo.material || materialLabel,
+        kuantiti  : data[i][3],
+        unit      : data[i][4],
+        tujuan    : data[i][5],
+        saiz      : rowSize
+      });
+    }
+
+    history.reverse();
+
+    return ContentService.createTextOutput(JSON.stringify(history))
              .setMimeType(ContentService.MimeType.JSON);
   }
-
-  var history = [];
-
-  for (var i = 1; i < data.length; i++) {
-    history.push({
-      timestamp : data[i][0] ? new Date(data[i][0]).toLocaleString('ms-MY') : "",
-      nama      : data[i][1],
-      material  : data[i][2],
-      kuantiti  : data[i][3],
-      unit      : data[i][4],
-      tujuan    : data[i][5],
-      saiz      : String(data[i][6] || "").trim()
-    });
-  }
-
-  // Terbalik supaya paling baru di atas
-  history.reverse();
-
-  return ContentService.createTextOutput(JSON.stringify(history))
-           .setMimeType(ContentService.MimeType.JSON);
-}
 
   // Senarai stok penuh untuk halaman Restok & Senarai Stock
   // Sheet Stock: A bahan | B stok awal | C digunakan | D baki | E minimum | F saiz
@@ -286,6 +289,10 @@ function doGet(e) {
 
     var stock = Object.keys(stockMap).map(function (key) {
       return stockMap[key];
+    });
+
+    stock.sort(function (a, b) {
+      return String(a.material).localeCompare(String(b.material)) || String(a.saiz).localeCompare(String(b.saiz));
     });
 
     return ContentService.createTextOutput(JSON.stringify(stock))
@@ -600,4 +607,9 @@ function sendTelegramUsageMulti(nama, tujuan, items) {
   } catch(err) {
     console.log("Telegram multi usage error: " + err.message);
   }
+}
+
+function debugTelegramProps() {
+  console.log('TOKEN:', PropertiesService.getScriptProperties().getProperty('TELEGRAM_TOKEN'));
+  console.log('CHAT_ID:', PropertiesService.getScriptProperties().getProperty('TELEGRAM_CHAT_ID'));
 }
