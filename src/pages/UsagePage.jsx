@@ -4,7 +4,7 @@ import MaterialCombobox from '../components/MaterialCombobox.jsx'
 import StatusMessage from '../components/StatusMessage.jsx'
 import { useRemoteData } from '../hooks/useRemoteData.js'
 
-const UNIT_OPTIONS = ['KG', 'G', 'TON', 'PCS', 'UNIT', 'LITER', 'ML', 'METER', 'CM', 'ROLL', 'SET', 'BUNDLE', 'PACK', 'PAIR', 'DOZEN']
+const UNIT_OPTIONS = ['', '', 'PCS', 'UNIT', '', 'BEG', '', '', '', '', '', '', '']
 
 const LOOKUP_DELAY_MS = 360
 
