@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { apiGet, apiPost, cleanList, extractMaterialParts, fetchUsageHistory } from '../api.js'
+import { useEffect, useRef, useState } from 'react'
+import { apiGet, apiPost, cleanList, extractMaterialParts } from '../api.js'
 import MaterialCombobox from '../components/MaterialCombobox.jsx'
 import StatusMessage from '../components/StatusMessage.jsx'
-import { useRemoteData } from '../hooks/useRemoteData.js'
 
 const UNIT_OPTIONS = ['PCS', 'UNIT', 'BEG', ]
 
@@ -50,45 +49,12 @@ function parseBalancePayload(payload) {
   return { balance: null, balanceUnit: '', saiz: '' }
 }
 
-function normalizeHistoryRows(payload) {
-  return payload
-    .map((row) => {
-      if (Array.isArray(row)) {
-        return {
-          date: String(row[0] ?? '').trim(),
-          name: String(row[1] ?? '').trim(),
-          material: String(row[2] ?? '').trim(),
-          qty: String(row[3] ?? '').trim(),
-          unit: String(row[4] ?? '').trim(),
-          saiz: String(row[6] ?? '').trim(),
-          tujuan: String(row[5] ?? '').trim(),
-        }
-      }
-      if (row && typeof row === 'object') {
-        return {
-          date: String(row.tarikh ?? row.date ?? row.timestamp ?? '').trim(),
-          name: String(row.nama ?? row.name ?? '').trim(),
-          material: String(row.material ?? row.item ?? '').trim(),
-          qty: String(row.kuantiti ?? row.quantity ?? row.qty ?? '').trim(),
-          unit: String(row.unit ?? '').trim(),
-          saiz: String(row.saiz ?? row.size ?? row.saiz_material ?? '').trim(),
-          tujuan: String(row.tujuan ?? row.purpose ?? '').trim(),
-        }
-      }
-      return null
-    })
-    .filter((row) => row && (row.material || row.name || row.qty))
-    .slice(0, 40)
-}
-
 function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultNama }) {
   const [nama, setNama] = useState(defaultNama || '')
   const [tujuan, setTujuan] = useState('')
   const [items, setItems] = useState(() => [createEmptyItem()])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
-  const history = useRemoteData(fetchUsageHistory, [])
-  const usageHistory = useMemo(() => normalizeHistoryRows(history.data), [history.data])
 
   const lookupTimersRef = useRef({})
   // Per-row request counters: a response is applied only if no newer lookup started since.
@@ -262,7 +228,6 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         setTujuan('')
         items.forEach((item) => cancelLookups(item.id))
         setItems([createEmptyItem()])
-        history.reload()
         onSubmitted()
       } else {
         setStatus({ type: 'error', message: result || 'Permohonan tidak berjaya diproses.' })
@@ -278,7 +243,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
   const labelClass = 'mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700'
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div>
       <form
         onSubmit={handleSubmit}
         className="reveal reveal-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10 sm:p-8"
@@ -441,61 +406,6 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         <p className="mt-4 text-xs text-slate-500">Pastikan semua maklumat yang dihantar adalah tepat untuk tujuan rekod stor.</p>
       </form>
 
-      <aside
-        aria-label="Rekod penggunaan terkini"
-        className={`reveal reveal-3 self-start rounded-3xl border p-6 shadow-xl shadow-slate-900/30 ${theme.sidePanel}`}
-      >
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <h3 className={`font-display text-xl leading-tight ${theme.heading}`}>Usage History</h3>
-          <button
-            type="button"
-            onClick={history.reload}
-            disabled={history.isLoading}
-            className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition hover:bg-white/20 disabled:opacity-50"
-          >
-            {history.isLoading ? 'Memuat...' : 'Refresh'}
-          </button>
-        </div>
-        <p className="mb-4 text-xs opacity-70">Rekod penggunaan terkini untuk rujukan pantas.</p>
-
-        {history.error ? (
-          <p className="text-sm text-rose-300">Gagal memuatkan usage history.</p>
-        ) : usageHistory.length === 0 ? (
-          <p className="text-sm opacity-70">
-            {history.isLoading ? 'Sedang memuatkan usage history...' : 'Tiada data usage history.'}
-          </p>
-        ) : (
-          <div className="max-h-[32rem] space-y-2 overflow-y-auto pr-1">
-            {usageHistory.map((row, index) => (
-              <div
-                key={`${row.date}-${row.name}-${row.material}-${index}`}
-                className={`rounded-xl border p-3 text-sm ${index === 0 ? 'border-emerald-300 bg-emerald-50/80' : theme.sideItem}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold leading-tight">{row.material || '-'}</p>
-                      {index === 0 && (
-                        <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                          Terbaharu
-                        </span>
-                      )}
-                    </div>
-                    {row.saiz && <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Saiz: {row.saiz}</p>}
-                  </div>
-                  <span className="shrink-0 font-bold">
-                    {row.qty || '-'} {row.unit}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs opacity-70">
-                  {row.name || '-'} · {row.date || '-'}
-                </p>
-                {row.tujuan && <p className="mt-1 text-[11px] opacity-70">Tujuan: {row.tujuan}</p>}
-              </div>
-            ))}
-          </div>
-        )}
-      </aside>
     </div>
   )
 }
