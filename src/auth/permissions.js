@@ -7,8 +7,22 @@ export function hasRole(profile, minRole) {
 // Minimum role to see each page, mirrors ACTION_ROLES in backend/stock.gs.
 export const PAGE_ROLES = {
   usage: 'staff',
-  restock: 'storekeeper',
+  restock: 'admin',
   stock: 'staff',
-  telegram: 'admin',
+  telegram: 'staff',
   users: 'admin',
+}
+
+export function canAccessPage(profile, pageId) {
+  if (!profile || !profile.role) return false
+
+  if (pageId === 'usage') {
+    return profile.role === 'staff' || profile.role === 'admin'
+  }
+
+  if (pageId === 'restock') {
+    return profile.role === 'admin'
+  }
+
+  return hasRole(profile, PAGE_ROLES[pageId])
 }

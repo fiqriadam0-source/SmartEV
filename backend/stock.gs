@@ -63,7 +63,7 @@ function splitMaterialLabel(label) {
 var ACTION_ROLES = {
   getMaterials: 'staff', getSizesByMaterial: 'staff', getBalanceByMaterial: 'staff',
   getStock: 'staff', getUsageHistory: 'staff', usage: 'staff',
-  restock: 'storekeeper', telegram: 'admin'
+  restock: 'admin', telegram: 'admin'
 };
 
 var ROLE_RANK = { staff: 1, storekeeper: 2, admin: 3 };
@@ -119,8 +119,17 @@ function getCaller(accessToken) {
 }
 
 function checkActionAllowed(action, caller) {
-  var minRole = ACTION_ROLES[action] || 'staff';
   if (!caller || !caller.status || caller.status !== 'active') return false;
+
+  if (action === 'usage') {
+    return caller.role === 'staff' || caller.role === 'admin';
+  }
+
+  if (action === 'restock') {
+    return caller.role === 'admin';
+  }
+
+  var minRole = ACTION_ROLES[action] || 'staff';
   var rankCaller = ROLE_RANK[caller.role] || 0;
   var rankMin = ROLE_RANK[minRole] || 0;
   return rankCaller >= rankMin;

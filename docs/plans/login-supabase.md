@@ -35,7 +35,7 @@ Account status: `pending` (new sign-up) → `active` (approved) or `disabled` (b
 | --- | --- | --- | --- | --- |
 | See stock, materials, usage history | – | ✓ | ✓ | ✓ |
 | Record material usage (`#usage`) | – | ✓ | ✓ | ✓ |
-| Restock (`#restock`) | – | – | ✓ | ✓ |
+| Restock (`#restock`) | – | – | – | ✓ |
 | Telegram sender (`#telegram`) | – | – | – | ✓ |
 | Approve users, change roles, disable accounts (`#users`) | – | – | – | ✓ |
 
@@ -231,11 +231,12 @@ New Script Properties: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `AUTH_MODE` (
    var ACTION_ROLES = {
      getMaterials: 'staff', getSizesByMaterial: 'staff', getBalanceByMaterial: 'staff',
      getStock: 'staff', getUsageHistory: 'staff', usage: 'staff',
-     restock: 'storekeeper',
+     restock: 'admin',
      telegram: 'admin'
    };
    var ROLE_RANK = { staff: 1, storekeeper: 2, admin: 3 };
    ```
+   Storekeeper can still view stock and usage history, but they cannot use the usage form or restock. The write actions remain staff-only and admin-only respectively.
 3. **`getCaller(accessToken)`:** cache lookup, then the `get_my_access` call via `UrlFetchApp` with `muteHttpExceptions: true`. Returns `null` for a 401 or an empty result.
 4. **Checks.** No caller → `Error: AUTH_REQUIRED`. Caller not `active`, or rank too low → `Error: FORBIDDEN`. In `log` mode, failures are logged with `console.log` but the request still runs. In `off` mode there is no check.
 5. **Audit.** Append the caller's email as a **new last column**: `MaterialUsage` G, `Restock` E. Existing column positions don't move, so current reads stay valid. Telegram usage and restock messages include the caller's name.
@@ -256,7 +257,7 @@ New Script Properties: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `AUTH_MODE` (
 - [ ] Sign up → lands directly on the pending screen (no data loads) since Confirm email is off.
 - [ ] Admin approves as staff → user presses "Semak semula" → sees Usage and Stock, but not Restok, Telegram or Pengguna.
 - [ ] Staff calling the backend directly with `action=restock` (using their own token) gets `Error: FORBIDDEN`.
-- [ ] Storekeeper can restock; admin can do everything and manage users.
+- [ ] Storekeeper can view History Usage and Stock, but cannot use the usage form or restock; only admin can restock.
 - [ ] A disabled user is locked out within 5 minutes (cache window), even with an unexpired token.
 - [ ] `curl` without `access_token` gets `Error: AUTH_REQUIRED` in enforce mode.
 - [ ] Password reset works end to end (same browser).

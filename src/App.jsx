@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchMaterials, fetchStock } from './api.js'
-import { hasRole, PAGE_ROLES } from './auth/permissions.js'
+import { canAccessPage, hasRole, PAGE_ROLES } from './auth/permissions.js'
 import useAuth from './auth/useAuth.js'
 import { useInstallPrompt } from './hooks/useInstallPrompt.js'
 import { useRemoteData } from './hooks/useRemoteData.js'
@@ -47,7 +47,7 @@ function App() {
   const installPrompt = useInstallPrompt()
 
   const visiblePages = useMemo(
-    () => PAGES.filter((page) => hasRole(profile, PAGE_ROLES[page.id])),
+    () => PAGES.filter((page) => canAccessPage(profile, page.id)),
     [profile],
   )
 
