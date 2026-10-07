@@ -3,7 +3,7 @@ import { apiGet, apiPost, cleanList, extractMaterialParts } from '../api.js'
 import MaterialCombobox from '../components/MaterialCombobox.jsx'
 import StatusMessage from '../components/StatusMessage.jsx'
 
-const UNIT_OPTIONS = ['PCS', 'UNIT', 'BEG', ]
+const UNIT_OPTIONS = ['PCS', 'UNIT', 'BEG', 'BATANG', ]
 
 const LOOKUP_DELAY_MS = 360
 
