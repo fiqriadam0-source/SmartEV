@@ -7,6 +7,7 @@ import { useRemoteData } from './hooks/useRemoteData.js'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import PendingApprovalPage from './pages/auth/PendingApprovalPage.jsx'
 import SignUpPage from './pages/auth/SignUpPage.jsx'
+import AddItemPage from './pages/AddItemPage.jsx'
 import RestockPage from './pages/RestockPage.jsx'
 import StockPage from './pages/StockPage.jsx'
 import TelegramPage from './pages/TelegramPage.jsx'
@@ -17,6 +18,7 @@ import { THEMES } from './themes.js'
 const PAGES = [
   { id: 'usage', label: 'Penggunaan Material', icon: '🧰' },
   { id: 'restock', label: 'Restok', icon: '📦' },
+  { id: 'newitem', label: 'Tambah Item', icon: '➕' },
   { id: 'stock', label: 'Senarai Stock', icon: '📋' },
   { id: 'telegram', label: 'History Usage', icon: '🕘' },
   { id: 'users', label: 'Pengguna', icon: '👤' },
@@ -252,6 +254,9 @@ function App() {
             isLoadingMaterials={materials.isLoading}
             stockState={stockState}
           />
+        </div>
+        <div hidden={currentPage !== 'newitem'}>
+          <AddItemPage theme={activeTheme} stockState={stockState} />
         </div>
         <div hidden={currentPage !== 'stock'}>
           <StockPage theme={activeTheme} stockState={stockState} />

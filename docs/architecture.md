@@ -21,6 +21,7 @@ There is no server of our own. The Apps Script web app is the only backend and t
 | `src/App.jsx` | Shell: header, hamburger menu, theme switcher, install banner, shared data (materials, stock) |
 | `src/api.js` | Backend URL (`VITE_API_URL`), `apiGet` / `apiPost` helpers, loaders (`fetchMaterials`, `fetchStock`, `fetchUsageHistory`) |
 | `src/pages/UsagePage.jsx` | Material usage form: multiple rows, live balance lookup (debounced, per-row request counters), usage history |
+| `src/pages/AddItemPage.jsx` | Admin-only page prepared for a future add-item flow to the `Stock` sheet |
 | `src/pages/RestockPage.jsx` | Restock form + stock side panel |
 | `src/pages/StockPage.jsx` | Full stock grid |
 | `src/pages/TelegramPage.jsx` | Usage history view with size and newest item indicator; the old manual Telegram sender is no longer the primary flow |

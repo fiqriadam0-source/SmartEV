@@ -8,6 +8,7 @@ export function hasRole(profile, minRole) {
 export const PAGE_ROLES = {
   usage: 'staff',
   restock: 'admin',
+  newitem: 'admin',
   stock: 'staff',
   telegram: 'staff',
   users: 'admin',
@@ -20,7 +21,7 @@ export function canAccessPage(profile, pageId) {
     return profile.role === 'staff' || profile.role === 'admin'
   }
 
-  if (pageId === 'restock') {
+  if (pageId === 'restock' || pageId === 'newitem') {
     return profile.role === 'admin'
   }
 
