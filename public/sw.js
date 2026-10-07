@@ -1,5 +1,5 @@
-const STATIC_CACHE = "smartev-static-v1";
-const RUNTIME_CACHE = "smartev-runtime-v1";
+const STATIC_CACHE = "smartev-static-v2";
+const RUNTIME_CACHE = "smartev-runtime-v2";
 
 const APP_SHELL = [
   "./",

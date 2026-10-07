@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { apiPost } from '../api.js'
 import StatusMessage from '../components/StatusMessage.jsx'
 
-const ADD_ITEM_ENABLED = false
+const ADD_ITEM_ENABLED = true
 
 function AddItemPage({ theme, stockState }) {
   const [material, setMaterial] = useState('')
@@ -14,14 +14,6 @@ function AddItemPage({ theme, stockState }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-
-    if (!ADD_ITEM_ENABLED) {
-      setStatus({
-        type: 'error',
-        message: 'Fungsi tambah item belum aktif. Deploy backend stock.gs dulu sebelum menggunakan halaman ini.',
-      })
-      return
-    }
 
     const materialName = material.trim()
     if (!materialName) {
@@ -84,12 +76,6 @@ function AddItemPage({ theme, stockState }) {
           </span>
         </div>
 
-        {!ADD_ITEM_ENABLED && (
-          <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-            Fungsi tambah item belum aktif sehingga backend stock.gs dipasang semula di Apps Script.
-          </div>
-        )}
-
         <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Nama Bahan</label>
         <input
           type="text"
@@ -97,7 +83,7 @@ function AddItemPage({ theme, stockState }) {
           onChange={(event) => setMaterial(event.target.value)}
           placeholder="Contoh: Paip PVC"
           className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
-          disabled={isSubmitting || !ADD_ITEM_ENABLED}
+          disabled={isSubmitting}
           required
         />
 
@@ -108,7 +94,7 @@ function AddItemPage({ theme, stockState }) {
           onChange={(event) => setSaiz(event.target.value)}
           placeholder="Contoh: 1/2, 1, 4mm"
           className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
-          disabled={isSubmitting || !ADD_ITEM_ENABLED}
+          disabled={isSubmitting}
         />
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -145,10 +131,10 @@ function AddItemPage({ theme, stockState }) {
 
         <button
           type="submit"
-          disabled={isSubmitting || !ADD_ITEM_ENABLED}
+          disabled={isSubmitting}
           className={`mt-7 w-full rounded-xl px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition disabled:cursor-not-allowed disabled:bg-slate-400 ${theme.accent}`}
         >
-          {isSubmitting ? 'Menyimpan...' : ADD_ITEM_ENABLED ? 'Tambah Item' : 'Belum Siap'}
+          {isSubmitting ? 'Menyimpan...' : 'Tambah Item'}
         </button>
 
         <StatusMessage status={status} className="mt-5" />

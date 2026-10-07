@@ -62,7 +62,7 @@ function splitMaterialLabel(label) {
 // ======= AUTH helpers (Supabase) =======
 var ACTION_ROLES = {
   getMaterials: 'staff', getSizesByMaterial: 'staff', getBalanceByMaterial: 'staff',
-  getStock: 'staff', getUsageHistory: 'staff', usage: 'staff',
+  getStock: 'staff', getUsageHistory: 'staff', usage: 'staff', addItem: 'admin',
   restock: 'admin', telegram: 'admin'
 };
 
@@ -342,6 +342,53 @@ function doPost(e) {
       return ContentService.createTextOutput(
         result.ok ? "Telegram Success" : "Error: " + (result.description || "Mesej tidak dihantar")
       );
+    }
+
+    // ==================== ADD ITEM ====================
+    if (type === "addItem") {
+      var material = (e.parameter.material || "").trim();
+      var saiz = (e.parameter.saiz || "").trim();
+      var stokAwal = Number(e.parameter.stokAwal) || 0;
+      var minimum = Number(e.parameter.minimum) || 0;
+
+      if (authMode !== 'off' && !checkActionAllowed('addItem', caller)) {
+        return ContentService.createTextOutput('Error: FORBIDDEN');
+      }
+
+      if (!material) {
+        return ContentService.createTextOutput("Error: Nama bahan diperlukan");
+      }
+      if (isNaN(stokAwal) || stokAwal < 0) {
+        return ContentService.createTextOutput("Error: Stok awal tidak sah");
+      }
+      if (isNaN(minimum) || minimum < 0) {
+        return ContentService.createTextOutput("Error: Minimum tidak sah");
+      }
+
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var stockSheet = ss.getSheetByName("Stock");
+      if (!stockSheet) {
+        return ContentService.createTextOutput("Error: Sheet Stock tidak dijumpai");
+      }
+
+      var data = stockSheet.getDataRange().getValues();
+      var materialInfo = splitMaterialLabel(material);
+      var materialName = materialInfo.material || material;
+      var targetSize = saiz || (materialInfo.size || "");
+
+      for (var i = 1; i < data.length; i++) {
+        var rowMaterial = String(data[i][0] || "").trim();
+        var rowSize = String(data[i][5] || "").trim();
+        var sameName = rowMaterial.toLowerCase() === materialName.toLowerCase();
+        var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
+
+        if (sameName && sameSize) {
+          return ContentService.createTextOutput("Error: Item dengan bahan dan saiz yang sama sudah wujud");
+        }
+      }
+
+      stockSheet.appendRow([materialName, stokAwal, 0, stokAwal, minimum, targetSize]);
+      return ContentService.createTextOutput("Item baru berjaya ditambah ke Stock.");
     }
 
     // ==================== RESTOCK ====================
