@@ -249,7 +249,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         className="reveal reveal-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10 sm:p-8"
       >
         <div className="mb-6">
-          <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}>Borang Pemohonan Barang Guna Habis</h2>
+          <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}>PERMOHONAN BAHAN GUNA HABIS</h2>
           <p className="mt-1 text-sm font-medium uppercase tracking-wide text-slate-500">Sistem rekod barang kerja</p>
         </div>
 
