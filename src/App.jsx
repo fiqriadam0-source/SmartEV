@@ -16,12 +16,12 @@ import UsersPage from './pages/UsersPage.jsx'
 import { THEMES } from './themes.js'
 
 const PAGES = [
-  { id: 'usage', label: 'Penggunaan Material', icon: '🧰' },
-  { id: 'restock', label: 'Restok', icon: '📦' },
-  { id: 'newitem', label: 'Tambah Item', icon: '➕' },
-  { id: 'stock', label: 'Senarai Stock', icon: '📋' },
-  { id: 'telegram', label: 'History Usage', icon: '🕘' },
-  { id: 'users', label: 'Pengguna', icon: '👤' },
+  { id: 'usage', label: 'PERMOHONAN BARANG', icon: '🧰' },
+  { id: 'restock', label: 'RESTOK BARANG', icon: '📦' },
+  { id: 'newitem', label: 'TAMBAH BARANG', icon: '➕' },
+  { id: 'stock', label: 'INVENTORI BARANG', icon: '📋' },
+  { id: 'telegram', label: 'REKOD PERMOHONAN', icon: '🕘' },
+  { id: 'users', label: 'PENGURUSAN PENGGUNA', icon: '👤' },
 ]
 
 const ROLE_LABEL = { staff: 'Staff', storekeeper: 'Storekeeper', admin: 'Admin' }
