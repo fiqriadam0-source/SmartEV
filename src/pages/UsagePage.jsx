@@ -250,7 +250,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
       >
         <div className="mb-6">
           <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}>PERMOHONAN BAHAN GUNA HABIS</h2>
-          <p className="mt-1 text-sm font-medium uppercase tracking-wide text-slate-500">Sistem rekod barang kerja</p>
+          <p className="mt-1 text-sm font-medium uppercase tracking-wide text-slate-500">Sistem rekod bahan kerja</p>
         </div>
 
         <div className="mb-8 grid gap-5 sm:grid-cols-2">
