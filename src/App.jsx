@@ -146,7 +146,7 @@ function App() {
         <div className={`relative z-50 mb-6 flex items-center justify-between rounded-2xl border px-4 py-3 shadow-lg backdrop-blur-lg sm:px-6 ${activeTheme.panel}`}>
           <div className="flex items-center gap-3">
             <div className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${activeTheme.badge}`}>
-              SmartEV Stor
+              SMART INVENTORY MANAGEMENT SYSTEM
             </div>
             <span className="hidden text-sm font-medium text-slate-600 sm:inline">{activePage.label}</span>
           </div>

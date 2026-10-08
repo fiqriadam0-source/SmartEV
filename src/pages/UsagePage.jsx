@@ -249,8 +249,8 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         className="reveal reveal-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10 sm:p-8"
       >
         <div className="mb-6">
-          <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}>Borang Pemohonan Bahan Guna Habis</h2>
-          <p className="mt-1 text-sm font-medium uppercase tracking-wide text-slate-500">Sistem rekod bahan kerja</p>
+          <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}>Borang Pemohonan Barang Guna Habis</h2>
+          <p className="mt-1 text-sm font-medium uppercase tracking-wide text-slate-500">Sistem rekod barang kerja</p>
         </div>
 
         <div className="mb-8 grid gap-5 sm:grid-cols-2">
@@ -280,8 +280,8 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
           </div>
         </div>
 
-        <p className="text-sm font-bold uppercase tracking-wide text-slate-800">Bahan yang diperlukan</p>
-        <p className="mb-4 text-sm text-slate-500">Lengkapkan maklumat bahan diperlukan untuk permohonan ini.</p>
+        <p className="text-sm font-bold uppercase tracking-wide text-slate-800">Barang yang diperlukan</p>
+        <p className="mb-4 text-sm text-slate-500">Lengkapkan maklumat barang diperlukan untuk permohonan ini.</p>
 
         <div className="mb-2 hidden gap-3 px-4 text-xs font-bold uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto]">
           <div>Material</div>
@@ -300,7 +300,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
                 className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] md:items-start"
               >
                 <div>
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 md:hidden">Material</span>
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 md:hidden">BARANG</span>
                   <MaterialCombobox
                     value={item.material}
                     options={materials}
