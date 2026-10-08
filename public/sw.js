@@ -1,5 +1,6 @@
-const STATIC_CACHE = "smartev-static-v2";
-const RUNTIME_CACHE = "smartev-runtime-v2";
+const CACHE_VERSION = "smartev-v3";
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
 const APP_SHELL = [
   "./",
@@ -61,23 +62,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Vite build assets have hashed file names, so cache first is safe.
+  // Assets are built with unique hashes, so prefer the fresh network response and
+  // refresh the cache only after a successful fetch. This avoids serving stale JS
+  // bundles from a desktop browser that still has an older PWA cache installed.
   const isSameOriginAsset =
     url.origin === self.location.origin &&
     /\.(?:css|js|mjs|json|svg|png|jpg|jpeg|webp|ico|webmanifest)$/i.test(url.pathname);
 
   if (isSameOriginAsset) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) {
-          return cached;
-        }
-        return fetch(request).then((response) => {
+      fetch(request)
+        .then((response) => {
           const copy = response.clone();
           caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
           return response;
-        });
-      })
+        })
+        .catch(async () => {
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) return cachedResponse;
+          return Response.error();
+        })
     );
     return;
   }
