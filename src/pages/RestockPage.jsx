@@ -6,7 +6,9 @@ import StockList from '../components/StockList.jsx'
 
 function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
   const [material, setMaterial] = useState('')
+  const [spesifikasi, setSpesifikasi] = useState('')
   const [saiz, setSaiz] = useState('')
+  const [availableSpecs, setAvailableSpecs] = useState([])
   const [availableSizes, setAvailableSizes] = useState([])
   const [kuantiti, setKuantiti] = useState('')
   const [isLoadingSizes, setIsLoadingSizes] = useState(false)
@@ -14,7 +16,25 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
   const [status, setStatus] = useState({ type: 'idle', message: '' })
   const sizeRequestRef = useRef(0)
 
-  const fetchSizesForMaterial = async (selectedMaterial) => {
+  const fetchSpecsForMaterial = async (selectedMaterial) => {
+    const cleanMaterial = String(selectedMaterial || '').trim()
+    const requestId = ++sizeRequestRef.current
+
+    setSpesifikasi('')
+    setAvailableSpecs([])
+    if (!cleanMaterial) return
+
+    try {
+      const specs = cleanList(await apiGet('getSpecsByMaterial', { material: cleanMaterial }))
+      if (requestId !== sizeRequestRef.current) return
+      setAvailableSpecs(specs)
+      if (specs.length === 1) setSpesifikasi(specs[0])
+    } catch {
+      if (requestId === sizeRequestRef.current) setAvailableSpecs([])
+    }
+  }
+
+  const fetchSizesForMaterial = async (selectedMaterial, selectedSpec = '') => {
     const cleanMaterial = String(selectedMaterial || '').trim()
     const requestId = ++sizeRequestRef.current
 
@@ -24,7 +44,12 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
     setIsLoadingSizes(true)
     try {
-      const sizes = cleanList(await apiGet('getSizesByMaterial', { material: cleanMaterial }))
+      const sizes = cleanList(
+        await apiGet('getSizesByMaterial', {
+          material: cleanMaterial,
+          spesifikasi: selectedSpec,
+        }),
+      )
       if (requestId !== sizeRequestRef.current) return
       setAvailableSizes(sizes)
       if (sizes.length === 1) setSaiz(sizes[0])
@@ -40,6 +65,11 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
     if (!material.trim()) {
       setStatus({ type: 'error', message: 'Material wajib diisi.' })
+      return
+    }
+
+    if (availableSpecs.length > 0 && !spesifikasi.trim()) {
+      setStatus({ type: 'error', message: 'Sila pilih spesifikasi bahan sebelum hantar restok.' })
       return
     }
 
@@ -60,6 +90,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
     try {
       const resultText = await apiPost({
         material: material.trim(),
+        spesifikasi: spesifikasi.trim(),
         saiz: saiz.trim(),
         kuantiti: String(jumlah),
         type: 'restock',
@@ -101,21 +132,54 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
             options={materials}
             onChange={(text) => {
               setMaterial(text)
+              setSpesifikasi('')
               setSaiz('')
+              setAvailableSpecs([])
               setAvailableSizes([])
             }}
             onSelect={(item) => {
               setMaterial(item)
+              fetchSpecsForMaterial(item)
               fetchSizesForMaterial(item)
             }}
             onBlur={() => {
-              if (material.trim()) fetchSizesForMaterial(material)
+              if (material.trim()) {
+                fetchSpecsForMaterial(material)
+                fetchSizesForMaterial(material)
+              }
             }}
             placeholder={isLoadingMaterials ? 'Memuat material...' : 'Taip atau pilih material'}
             disabled={isLoadingMaterials || isSubmitting}
             inputFocus={theme.inputFocus}
           />
         </div>
+
+        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Spesifikasi</label>
+        <select
+          value={spesifikasi}
+          onChange={(event) => {
+            const nextSpec = event.target.value
+            setSpesifikasi(nextSpec)
+            if (material.trim()) fetchSizesForMaterial(material, nextSpec)
+          }}
+          disabled={isLoadingSizes || isSubmitting || !material.trim() || availableSpecs.length === 0}
+          className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
+        >
+          <option value="">
+            {!material.trim()
+              ? 'Pilih material dahulu'
+              : isLoadingSizes
+                ? 'Memuat spesifikasi...'
+                : availableSpecs.length === 0
+                  ? 'Tiada spesifikasi untuk material ini'
+                  : 'Pilih spesifikasi'}
+          </option>
+          {availableSpecs.map((specOption) => (
+            <option key={specOption} value={specOption}>
+              {specOption}
+            </option>
+          ))}
+        </select>
 
         <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Saiz</label>
         <select

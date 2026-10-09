@@ -14,9 +14,11 @@ function createEmptyItem() {
   return {
     id: rowCounter,
     material: '',
+    spesifikasi: '',
     kuantiti: '',
     unit: '',
     saiz: '',
+    availableSpecs: [],
     availableSizes: [],
     balance: null,
     balanceUnit: '',
@@ -79,36 +81,71 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     )
   }
 
-  const fetchSizes = async (itemId, materialName) => {
+  const fetchSpecs = async (itemId, materialName) => {
+    const key = `specs:${itemId}`
+    const seq = nextSeq(key)
+    const lookupName = extractMaterialParts(materialName).material || materialName
+
+    let specs = []
+    try {
+      specs = cleanList(await apiGet('getSpecsByMaterial', { material: lookupName }))
+    } catch (error) {
+      console.error('Gagal load spesifikasi:', error)
+    }
+    if (isLatest(key, seq)) updateItemById(itemId, { availableSpecs: specs })
+  }
+
+  const fetchSizes = async (itemId, materialName, specificationName = '') => {
     const key = `sizes:${itemId}`
     const seq = nextSeq(key)
     const lookupName = extractMaterialParts(materialName).material || materialName
 
     let sizes = []
     try {
-      sizes = cleanList(await apiGet('getSizesByMaterial', { material: lookupName }))
+      sizes = cleanList(
+        await apiGet('getSizesByMaterial', {
+          material: lookupName,
+          spesifikasi: specificationName,
+        }),
+      )
     } catch (error) {
       console.error('Gagal load saiz:', error)
     }
     if (isLatest(key, seq)) updateItemById(itemId, { availableSizes: sizes })
   }
 
-  const fetchBalance = async (itemId, materialName, sizeName) => {
+  const fetchBalance = async (itemId, materialName, sizeName, specificationName = '') => {
     const key = `balance:${itemId}`
     const seq = nextSeq(key)
 
-    updateItemById(itemId, { balance: null, balanceUnit: '', saiz: sizeName, balanceStatus: 'loading' })
+    updateItemById(itemId, { balance: null, balanceUnit: '', spesifikasi: specificationName, saiz: sizeName, balanceStatus: 'loading' })
 
     try {
-      const payload = await apiGet('getBalanceByMaterial', { material: materialName, saiz: sizeName })
+      const payload = await apiGet('getBalanceByMaterial', {
+        material: materialName,
+        saiz: sizeName,
+        spesifikasi: specificationName,
+      })
       const { balance, balanceUnit, saiz } = parseBalancePayload(payload)
       if (!Number.isFinite(balance)) throw new Error('Balance format not supported')
       if (isLatest(key, seq)) {
-        updateItemById(itemId, (item) => ({ balance, balanceUnit, saiz: saiz || sizeName || item.saiz, balanceStatus: 'ok' }))
+        updateItemById(itemId, (item) => ({
+          balance,
+          balanceUnit,
+          spesifikasi: specificationName || item.spesifikasi,
+          saiz: saiz || sizeName || item.saiz,
+          balanceStatus: 'ok',
+        }))
       }
     } catch {
       if (isLatest(key, seq)) {
-        updateItemById(itemId, (item) => ({ balance: null, balanceUnit: '', saiz: sizeName || item.saiz, balanceStatus: 'error' }))
+        updateItemById(itemId, (item) => ({
+          balance: null,
+          balanceUnit: '',
+          spesifikasi: specificationName || item.spesifikasi,
+          saiz: sizeName || item.saiz,
+          balanceStatus: 'error',
+        }))
       }
     }
   }
@@ -129,7 +166,9 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     cancelLookups(itemId)
     updateItemById(itemId, {
       material: value,
+      spesifikasi: '',
       saiz: '',
+      availableSpecs: [],
       availableSizes: [],
       balance: null,
       balanceUnit: '',
@@ -141,17 +180,36 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     scheduleLookup(
       itemId,
       () => {
-        fetchSizes(itemId, materialName)
-        fetchBalance(itemId, materialName, '')
+        fetchSpecs(itemId, materialName)
+        fetchSizes(itemId, materialName, '')
+        fetchBalance(itemId, materialName, '', '')
       },
       immediate ? 0 : LOOKUP_DELAY_MS,
     )
   }
 
+  const changeSpec = (item, nextSpec) => {
+    updateItemById(item.id, {
+      spesifikasi: nextSpec,
+      saiz: '',
+      availableSizes: [],
+      balance: null,
+      balanceUnit: '',
+      balanceStatus: 'idle',
+    })
+
+    const materialName = item.material.trim()
+    if (!materialName) return
+    scheduleLookup(item.id, () => {
+      fetchSizes(item.id, materialName, nextSpec)
+      fetchBalance(item.id, materialName, '', nextSpec)
+    })
+  }
+
   const changeSize = (item, nextSize) => {
     updateItemById(item.id, { saiz: nextSize })
     const materialName = item.material.trim()
-    if (materialName) scheduleLookup(item.id, () => fetchBalance(item.id, materialName, nextSize))
+    if (materialName) scheduleLookup(item.id, () => fetchBalance(item.id, materialName, nextSize, item.spesifikasi))
   }
 
   const addRow = () => setItems((prev) => [...prev, createEmptyItem()])
@@ -176,6 +234,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     const validItems = items
       .map((item) => ({
         material: item.material.trim(),
+        spesifikasi: item.spesifikasi.trim(),
         kuantiti: Number(item.kuantiti),
         unit: item.unit.trim(),
         saiz: item.saiz.trim(),
@@ -283,9 +342,9 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         <p className="text-sm font-bold uppercase tracking-wide text-slate-800">Barang yang diperlukan</p>
         <p className="mb-4 text-sm text-slate-500">Lengkapkan maklumat barang diperlukan untuk permohonan ini.</p>
 
-        <div className="mb-2 hidden gap-3 px-4 text-xs font-bold uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto]">
+        <div className="mb-2 hidden gap-3 px-4 text-xs font-bold uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1.8fr)_minmax(0,1fr)_auto]">
           <div>Material</div>
-          <div>Kuantiti &amp; Saiz</div>
+          <div>Spesifikasi &amp; Kuantiti &amp; Saiz</div>
           <div>Unit</div>
           <div className="w-20 text-right">Tindakan</div>
         </div>
@@ -297,7 +356,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
             return (
               <div
                 key={item.id}
-                className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] md:items-start"
+                className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1.8fr)_minmax(0,1fr)_auto] md:items-start"
               >
                 <div>
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 md:hidden">BARANG</span>
@@ -313,7 +372,22 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
                 </div>
 
                 <div className="space-y-2">
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 md:hidden">Kuantiti &amp; Saiz</span>
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 md:hidden">Spesifikasi &amp; Kuantiti &amp; Saiz</span>
+                  <select
+                    value={item.spesifikasi}
+                    onChange={(event) => changeSpec(item, event.target.value)}
+                    disabled={isSubmitting || !hasMaterial || item.availableSpecs.length === 0}
+                    className={inputClass}
+                  >
+                    <option value="">
+                      {!hasMaterial ? 'Pilih bahan dulu' : item.availableSpecs.length === 0 ? 'Tiada spesifikasi' : 'Pilih spesifikasi'}
+                    </option>
+                    {item.availableSpecs.map((spec) => (
+                      <option key={spec} value={spec}>
+                        {spec}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     type="number"
                     min="1"
@@ -346,6 +420,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
                   {hasMaterial && item.balanceStatus === 'ok' && (
                     <p className={`text-xs font-bold ${isOverBalance ? 'text-rose-700' : 'text-emerald-700'}`}>
                       Baki tersedia: {item.balance} {item.balanceUnit || item.unit}
+                      {item.spesifikasi && <span className="font-medium text-slate-500"> · Spesifikasi: {item.spesifikasi}</span>}
                       {item.saiz && <span className="font-medium text-slate-500"> · Saiz: {item.saiz}</span>}
                     </p>
                   )}

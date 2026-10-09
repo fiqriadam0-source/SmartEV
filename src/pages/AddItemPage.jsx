@@ -6,6 +6,7 @@ const ADD_ITEM_ENABLED = true
 
 function AddItemPage({ theme, stockState }) {
   const [material, setMaterial] = useState('')
+  const [spesifikasi, setSpesifikasi] = useState('')
   const [saiz, setSaiz] = useState('')
   const [stokAwal, setStokAwal] = useState('')
   const [minimum, setMinimum] = useState('')
@@ -40,6 +41,7 @@ function AddItemPage({ theme, stockState }) {
       const resultText = await apiPost({
         type: 'addItem',
         material: materialName,
+        spesifikasi: spesifikasi.trim(),
         saiz: saiz.trim(),
         stokAwal: String(stokAwalValue),
         minimum: String(minimumValue),
@@ -52,6 +54,7 @@ function AddItemPage({ theme, stockState }) {
 
       setStatus({ type: 'success', message: resultText || 'Item baru berjaya ditambah ke sheet.' })
       setMaterial('')
+      setSpesifikasi('')
       setSaiz('')
       setStokAwal('')
       setMinimum('')
@@ -85,6 +88,16 @@ function AddItemPage({ theme, stockState }) {
           className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
           disabled={isSubmitting}
           required
+        />
+
+        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Spesifikasi</label>
+        <input
+          type="text"
+          value={spesifikasi}
+          onChange={(event) => setSpesifikasi(event.target.value)}
+          placeholder="Contoh: 0.5 inch, 13A, Hitam"
+          className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
+          disabled={isSubmitting}
         />
 
         <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Saiz</label>
@@ -145,12 +158,12 @@ function AddItemPage({ theme, stockState }) {
         <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
           <li>• Data baru akan ditambah terus ke lembaran Stock.</li>
           <li>• Stok awal akan dipaparkan sebagai baki semasa item tersebut ditambah.</li>
-          <li>• Saiz boleh dikosongkan jika bahan hanya ada satu saiz.</li>
+          <li>• Spesifikasi dan saiz boleh dikosongkan jika bahan tiada variasi untuk keduanya.</li>
           <li>• Hanya akaun Admin yang boleh mengakses halaman ini.</li>
         </ul>
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white/60 p-4 text-sm text-slate-600">
           <p className="font-bold uppercase tracking-wide text-slate-700">Kolum sheet</p>
-          <p className="mt-2">A = Bahan, B = Stok Awal, C = Digunakan, D = Baki, E = Minimum, F = Saiz</p>
+          <p className="mt-2">A = Bahan, B = Stok Awal, C = Digunakan, D = Baki, E = Minimum, F = Saiz, G = Spesifikasi</p>
         </div>
       </aside>
     </div>

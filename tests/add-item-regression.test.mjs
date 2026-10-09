@@ -14,3 +14,13 @@ test('Add-item page is enabled', () => {
 test('Apps Script backend has addItem handler', () => {
   assert.match(backend, /if\s*\(\s*type\s*===\s*["']addItem["']\s*\)/)
 })
+
+test('Specification-aware flow is present in frontend pages', () => {
+  assert.match(addItemPage, /spesifikasi|spec/gi)
+  assert.match(fs.readFileSync(path.join(repoRoot, 'src/pages/RestockPage.jsx'), 'utf8'), /spesifikasi|spec/gi)
+  assert.match(fs.readFileSync(path.join(repoRoot, 'src/pages/UsagePage.jsx'), 'utf8'), /spesifikasi|spec/gi)
+})
+
+test('Apps Script backend supports specification lookups', () => {
+  assert.match(backend, /getSpecsByMaterial|spesifikasi/gi)
+})

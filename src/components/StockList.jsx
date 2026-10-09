@@ -1,4 +1,4 @@
-// Stock rows from ?action=getStock: { material, saiz, baki, minimum }.
+// Stock rows from ?action=getStock: { material, spesifikasi, saiz, baki, minimum }.
 function StockList({ stock, isLoading, error, theme, variant = 'compact' }) {
   if (isLoading) return <p className="text-sm opacity-70">Sedang memuatkan stock...</p>
   if (error) return <p className="text-sm text-rose-300">{error}</p>
@@ -7,11 +7,13 @@ function StockList({ stock, isLoading, error, theme, variant = 'compact' }) {
     ? stock.reduce((accumulator, item) => {
         const materialName = String(item.material || '').trim()
         const sizeName = String(item.saiz || '').trim()
+        const specificationName = String(item.spesifikasi || '').trim()
         if (!materialName) return accumulator
 
-        const key = `${materialName.toLowerCase()}::${sizeName.toLowerCase()}`
+        const key = `${materialName.toLowerCase()}::${sizeName.toLowerCase()}::${specificationName.toLowerCase()}`
         const nextItem = {
           material: materialName,
+          spesifikasi: specificationName,
           saiz: sizeName,
           baki: Number(item.baki) || 0,
           minimum: Number(item.minimum) || 0,
@@ -56,6 +58,7 @@ function StockList({ stock, isLoading, error, theme, variant = 'compact' }) {
                 {item.baki}
               </span>
             </div>
+            {item.spesifikasi && <p className={`mt-1 opacity-80 ${isGrid ? 'text-sm' : 'text-xs'}`}>Spesifikasi: {item.spesifikasi}</p>}
             {item.saiz && <p className={`mt-1 opacity-80 ${isGrid ? 'text-sm' : 'text-xs'}`}>Saiz: {item.saiz}</p>}
             <p className={`mt-1 opacity-70 ${isGrid ? 'text-sm' : 'text-xs'}`}>Minimum: {item.minimum}</p>
           </div>

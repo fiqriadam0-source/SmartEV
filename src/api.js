@@ -63,6 +63,10 @@ export function cleanList(data) {
     : []
 }
 
+export function normalizeSpecification(value) {
+  return String(value ?? '').trim()
+}
+
 // Material labels may carry the size after a marker, e.g. "Paip PVC | 1/2".
 export function extractMaterialParts(label) {
   const raw = String(label || '').trim()

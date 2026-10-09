@@ -62,9 +62,11 @@ Constraints that shape the frontend:
 
 | Sheet | Columns |
 | --- | --- |
-| `Stock` | A bahan, B stok awal, C digunakan, D baki, E minimum, F saiz |
-| `MaterialUsage` | tarikh, nama, material, kuantiti, unit, tujuan, saiz |
+| `Stock` | A bahan, B stok awal, C digunakan, D baki, E minimum, F saiz, G spesifikasi |
+| `MaterialUsage` | tarikh, nama, material, kuantiti, unit, tujuan, saiz, spesifikasi |
 | `Restock` | tarikh, material, kuantiti, saiz |
+
+Spesifikasi ialah medan pilihan untuk bahan yang mempunyai variasi (contoh: jenis, warna, ukuran kod, model). Jika bahan tidak mempunyai spesifikasi, medan boleh kosong dan sistem akan terus menggunakan rekod yang wujud tanpa perlu diisi.
 
 A material can have several rows in `Stock`, one per size (column F).
 
