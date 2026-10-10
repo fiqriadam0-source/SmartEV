@@ -24,3 +24,10 @@ test('Specification-aware flow is present in frontend pages', () => {
 test('Apps Script backend supports specification lookups', () => {
   assert.match(backend, /getSpecsByMaterial|spesifikasi/gi)
 })
+
+test('Restock logic prioritises the exact specification before the blank-spec fallback', () => {
+  assert.match(
+    fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8'),
+    /if\s*\(\s*spesifikasi\s*\)\s*\{[\s\S]*rowSpec\.toLowerCase\(\)\s*===\s*spesifikasi\.toLowerCase\(\)/m,
+  )
+})

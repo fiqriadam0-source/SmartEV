@@ -171,7 +171,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
               : isLoadingSizes
                 ? 'Memuat spesifikasi...'
                 : availableSpecs.length === 0
-                  ? 'Tiada spesifikasi untuk material ini'
+                  ? 'Tiada spesifikasi (boleh teruskan)'
                   : 'Pilih spesifikasi'}
           </option>
           {availableSpecs.map((specOption) => (

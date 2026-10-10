@@ -460,6 +460,8 @@ function doPost(e) {
       var materialInfo = splitMaterialLabel(material);
       var materialName = materialInfo.material || material;
       var data = stockSheet.getDataRange().getValues();
+      var exactMatchIndex = -1;
+      var blankMatchIndex = -1;
 
       for (var i = 1; i < data.length; i++) {
         var rowMaterial = String(data[i][0] || "").trim();
@@ -467,20 +469,37 @@ function doPost(e) {
         var rowSpec = String(data[i][6] || "").trim();
         var sameName = rowMaterial.toLowerCase() === materialName.toLowerCase();
         var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
-        var sameSpec = !spesifikasi || !rowSpec || rowSpec.toLowerCase() === spesifikasi.toLowerCase();
 
-        if (sameName && sameSize && sameSpec) {
-          var stokAwalBaru = Number(data[i][1]) + kuantiti;
-          var bakiBaru     = Number(data[i][3]) + kuantiti;
+        if (!sameName || !sameSize) continue;
 
-          stockSheet.getRange(i + 1, 2).setValue(stokAwalBaru);
-          stockSheet.getRange(i + 1, 4).setValue(bakiBaru);
-
-          restockSheet.appendRow([new Date(), materialName, kuantiti, targetSize || rowSize, spesifikasi || rowSpec]);
-          sendTelegramRestock(materialName + (targetSize ? " (" + targetSize + ")" : "") + (spesifikasi ? " - " + spesifikasi : ""), kuantiti);
-
-          return ContentService.createTextOutput("Restock Success");
+        if (spesifikasi) {
+          if (rowSpec && rowSpec.toLowerCase() === spesifikasi.toLowerCase()) {
+            exactMatchIndex = i;
+            break;
+          }
+          if (!rowSpec && blankMatchIndex === -1) {
+            blankMatchIndex = i;
+          }
+        } else if (!rowSpec && blankMatchIndex === -1) {
+          blankMatchIndex = i;
         }
+      }
+
+      var targetRowIndex = exactMatchIndex !== -1 ? exactMatchIndex : blankMatchIndex;
+      if (targetRowIndex !== -1) {
+        var rowIndex = targetRowIndex;
+        var rowSpec = String(data[rowIndex][6] || "").trim();
+        var rowSize = String(data[rowIndex][5] || "").trim();
+        var stokAwalBaru = Number(data[rowIndex][1]) + kuantiti;
+        var bakiBaru     = Number(data[rowIndex][3]) + kuantiti;
+
+        stockSheet.getRange(rowIndex + 1, 2).setValue(stokAwalBaru);
+        stockSheet.getRange(rowIndex + 1, 4).setValue(bakiBaru);
+
+        restockSheet.appendRow([new Date(), materialName, kuantiti, targetSize || rowSize, spesifikasi || rowSpec]);
+        sendTelegramRestock(materialName + (targetSize ? " (" + targetSize + ")" : "") + (spesifikasi ? " - " + spesifikasi : ""), kuantiti);
+
+        return ContentService.createTextOutput("Restock Success");
       }
       return ContentService.createTextOutput("Error: Material tidak dijumpai");
     }
