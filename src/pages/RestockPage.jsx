@@ -16,9 +16,11 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
   const [status, setStatus] = useState({ type: 'idle', message: '' })
   const sizeRequestRef = useRef(0)
 
+  const normalizeMaterial = (value) => extractMaterialParts(String(value || '')).material || String(value || '').trim()
+
   const fetchSpecsForMaterial = async (selectedMaterial) => {
     const cleanMaterial = String(selectedMaterial || '').trim()
-    const normalizedMaterial = extractMaterialParts(cleanMaterial).material || cleanMaterial
+    const normalizedMaterial = normalizeMaterial(cleanMaterial)
     const requestId = ++sizeRequestRef.current
 
     setSpesifikasi('')
@@ -29,7 +31,10 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
       const specs = cleanList(await apiGet('getSpecsByMaterial', { material: normalizedMaterial }))
       if (requestId !== sizeRequestRef.current) return
       setAvailableSpecs(specs)
-      if (specs.length === 1) setSpesifikasi(specs[0])
+      if (specs.length === 1) {
+        setSpesifikasi(specs[0])
+        await fetchSizesForMaterial(cleanMaterial, specs[0])
+      }
     } catch {
       if (requestId === sizeRequestRef.current) setAvailableSpecs([])
     }
@@ -37,7 +42,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
   const fetchSizesForMaterial = async (selectedMaterial, selectedSpec = '') => {
     const cleanMaterial = String(selectedMaterial || '').trim()
-    const normalizedMaterial = extractMaterialParts(cleanMaterial).material || cleanMaterial
+    const normalizedMaterial = normalizeMaterial(cleanMaterial)
     const requestId = ++sizeRequestRef.current
 
     setSaiz('')
@@ -59,6 +64,30 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
       if (requestId === sizeRequestRef.current) setAvailableSizes([])
     } finally {
       if (requestId === sizeRequestRef.current) setIsLoadingSizes(false)
+    }
+  }
+
+  const handleMaterialChange = (nextMaterial) => {
+    const cleanMaterial = String(nextMaterial || '').trim()
+    setMaterial(cleanMaterial)
+    setSpesifikasi('')
+    setSaiz('')
+    setAvailableSpecs([])
+    setAvailableSizes([])
+
+    if (!cleanMaterial) return
+    fetchSpecsForMaterial(cleanMaterial)
+    fetchSizesForMaterial(cleanMaterial)
+  }
+
+  const handleSpecChange = (nextSpec) => {
+    const cleanSpec = String(nextSpec || '').trim()
+    setSpesifikasi(cleanSpec)
+    setSaiz('')
+    setAvailableSizes([])
+
+    if (material.trim()) {
+      fetchSizesForMaterial(material, cleanSpec)
     }
   }
 
@@ -133,21 +162,14 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
             value={material}
             options={materials}
             onChange={(text) => {
-              setMaterial(text)
-              setSpesifikasi('')
-              setSaiz('')
-              setAvailableSpecs([])
-              setAvailableSizes([])
+              handleMaterialChange(text)
             }}
             onSelect={(item) => {
-              setMaterial(item)
-              fetchSpecsForMaterial(item)
-              fetchSizesForMaterial(item)
+              handleMaterialChange(item)
             }}
             onBlur={() => {
               if (material.trim()) {
-                fetchSpecsForMaterial(material)
-                fetchSizesForMaterial(material)
+                handleMaterialChange(material)
               }
             }}
             placeholder={isLoadingMaterials ? 'Memuat material...' : 'Taip atau pilih material'}
@@ -160,9 +182,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
         <select
           value={spesifikasi}
           onChange={(event) => {
-            const nextSpec = event.target.value
-            setSpesifikasi(nextSpec)
-            if (material.trim()) fetchSizesForMaterial(material, nextSpec)
+            handleSpecChange(event.target.value)
           }}
           disabled={isLoadingSizes || isSubmitting || !material.trim() || availableSpecs.length === 0}
           className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
