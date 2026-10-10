@@ -38,6 +38,10 @@ function checkStockAlert() {
     sendTelegram(message);
   }
 }
+function normalizeText(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 function splitMaterialLabel(label) {
   var raw = String(label || "").trim();
   if (!raw) {
@@ -182,7 +186,7 @@ function doGet(e) {
       var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSpec = String(data[i][6] || "").trim();
 
-      if (rowMaterialName.toLowerCase() === materialName.toLowerCase() && rowSpec) {
+      if (normalizeText(rowMaterialName) === normalizeText(materialName) && rowSpec) {
         var key = rowSpec.toLowerCase();
         if (!seen[key]) {
           specs.push(rowSpec);
@@ -216,8 +220,8 @@ function doGet(e) {
       var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
-      var sameMaterial = rowMaterialName.toLowerCase() === materialName.toLowerCase();
-      var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
+      var sameMaterial = normalizeText(rowMaterialName) === normalizeText(materialName);
+      var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
 
       if (sameMaterial && rowSize && sameSpec) {
         var key = rowSize.toLowerCase();
@@ -253,9 +257,9 @@ function doGet(e) {
       var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
-      var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
-      var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
-      var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
+      var sameName = normalizeText(rowMaterialName) === normalizeText(materialName);
+      var sameSize = !targetSize || !rowSize || normalizeText(rowSize) === normalizeText(targetSize);
+      var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
 
       if (sameName && sameSize && sameSpec) {
         return ContentService.createTextOutput(JSON.stringify({
@@ -439,9 +443,9 @@ function doPost(e) {
         var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(data[i][5] || "").trim();
         var rowSpec = String(data[i][6] || "").trim();
-        var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
-        var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
-        var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
+        var sameName = normalizeText(rowMaterialName) === normalizeText(materialName);
+        var sameSize = !targetSize || !rowSize || normalizeText(rowSize) === normalizeText(targetSize);
+        var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
 
         if (sameName && sameSize && sameSpec) {
           return ContentService.createTextOutput("Error: Item dengan bahan, spesifikasi dan saiz yang sama sudah wujud");
@@ -483,8 +487,8 @@ function doPost(e) {
         var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(data[i][5] || "").trim();
         var rowSpec = String(data[i][6] || "").trim();
-        var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
-        var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
+        var sameName = normalizeText(rowMaterialName) === normalizeText(materialName);
+        var sameSize = !targetSize || !rowSize || normalizeText(rowSize) === normalizeText(targetSize);
 
         if (!sameName || !sameSize) continue;
 
@@ -573,9 +577,9 @@ function doPost(e) {
         var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(stockData[i][5] || "").trim();
         var rowSpec = String(stockData[i][6] || "").trim();
-        var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
-        var sameSize = !targetSize || (rowSize && rowSize.toLowerCase() === targetSize.toLowerCase());
-        var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
+        var sameName = normalizeText(rowMaterialName) === normalizeText(materialName);
+        var sameSize = !targetSize || (rowSize && normalizeText(rowSize) === normalizeText(targetSize));
+        var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
 
         if (sameName && sameSize && sameSpec) {
 

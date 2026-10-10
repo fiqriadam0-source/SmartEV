@@ -16,7 +16,11 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
   const [status, setStatus] = useState({ type: 'idle', message: '' })
   const sizeRequestRef = useRef(0)
 
-  const normalizeMaterial = (value) => extractMaterialParts(String(value || '')).material || String(value || '').trim()
+  const normalizeMaterial = (value) => {
+    const raw = String(value || '').trim().replace(/\s+/g, ' ')
+    const materialPart = extractMaterialParts(raw).material || raw
+    return materialPart.trim().replace(/\s+/g, ' ')
+  }
 
   const fetchSpecsForMaterial = async (selectedMaterial) => {
     const cleanMaterial = String(selectedMaterial || '').trim()

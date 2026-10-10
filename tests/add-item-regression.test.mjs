@@ -45,3 +45,8 @@ test('Stock material rows with size suffix still match the base material during 
     /rowMaterial\s*=\s*String\(data\[i\]\[0\]\s*\|\|\s*""\)\.trim\(\);\s*var\s*rowMaterialInfo\s*=\s*splitMaterialLabel\(rowMaterial\);\s*var\s*rowMaterialName\s*=\s*\(rowMaterialInfo\.material\s*\|\|\s*rowMaterial\)\.trim\(\);/m,
   )
 })
+
+test('Material matching ignores uppercase spelling and repeated spaces', () => {
+  const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
+  assert.match(backendText, /normalizeText\(value\)|normalizeText\(rowMaterialName\) === normalizeText\(materialName\)/)
+})
