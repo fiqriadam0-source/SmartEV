@@ -31,3 +31,9 @@ test('Restock logic prioritises the exact specification before the blank-spec fa
     /if\s*\(\s*spesifikasi\s*\)\s*\{[\s\S]*rowSpec\.toLowerCase\(\)\s*===\s*spesifikasi\.toLowerCase\(\)/m,
   )
 })
+
+test('Material labels with size suffix are normalized before spec and size matching', () => {
+  const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
+  assert.match(backendText, /splitMaterialLabel\(material\)|materialInfo\.material\s*\|\|\s*material/i)
+  assert.match(backendText, /sameSpec\s*=\s*.*rowSpec.*spesifikasi|sameSize\s*=\s*.*rowSize.*targetSize/i)
+})

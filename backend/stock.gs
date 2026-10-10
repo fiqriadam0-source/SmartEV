@@ -164,7 +164,9 @@ function doGet(e) {
 
   if (e.parameter.action === "getSpecsByMaterial") {
     var material = (e.parameter.material || "").trim();
-    if (!material) {
+    var materialInfo = splitMaterialLabel(material);
+    var materialName = materialInfo.material || material;
+    if (!materialName) {
       return ContentService.createTextOutput(JSON.stringify([]))
                .setMimeType(ContentService.MimeType.JSON);
     }
@@ -178,7 +180,7 @@ function doGet(e) {
       var rowMaterial = String(data[i][0] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
 
-      if (rowMaterial.toLowerCase() === material.toLowerCase() && rowSpec) {
+      if (rowMaterial.toLowerCase() === materialName.toLowerCase() && rowSpec) {
         var key = rowSpec.toLowerCase();
         if (!seen[key]) {
           specs.push(rowSpec);
@@ -193,8 +195,10 @@ function doGet(e) {
 
   if (e.parameter.action === "getSizesByMaterial") {
     var material = (e.parameter.material || "").trim();
+    var materialInfo = splitMaterialLabel(material);
+    var materialName = materialInfo.material || material;
     var targetSpec = (e.parameter.spesifikasi || "").trim();
-    if (!material) {
+    if (!materialName) {
       return ContentService.createTextOutput(JSON.stringify([]))
                .setMimeType(ContentService.MimeType.JSON);
     }
@@ -208,7 +212,7 @@ function doGet(e) {
       var rowMaterial = String(data[i][0] || "").trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
-      var sameMaterial = rowMaterial.toLowerCase() === material.toLowerCase();
+      var sameMaterial = rowMaterial.toLowerCase() === materialName.toLowerCase();
       var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
 
       if (sameMaterial && rowSize && sameSpec) {
@@ -226,10 +230,12 @@ function doGet(e) {
 
   if (e.parameter.action === "getBalanceByMaterial") {
     var material = (e.parameter.material || "").trim();
+    var materialInfo = splitMaterialLabel(material);
+    var materialName = materialInfo.material || material;
     var targetSize = (e.parameter.saiz || "").trim();
     var targetSpec = (e.parameter.spesifikasi || "").trim();
 
-    if (!material) {
+    if (!materialName) {
       return ContentService.createTextOutput(JSON.stringify({ error: "Material tidak dinyatakan" }))
                .setMimeType(ContentService.MimeType.JSON);
     }
@@ -241,7 +247,7 @@ function doGet(e) {
       var rowMaterial = String(data[i][0] || "").trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
-      var sameName = rowMaterial.toLowerCase() === material.toLowerCase();
+      var sameName = rowMaterial.toLowerCase() === materialName.toLowerCase();
       var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
       var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
 

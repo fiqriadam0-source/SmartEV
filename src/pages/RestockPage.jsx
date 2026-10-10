@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { apiGet, apiPost, cleanList } from '../api.js'
+import { apiGet, apiPost, cleanList, extractMaterialParts } from '../api.js'
 import MaterialCombobox from '../components/MaterialCombobox.jsx'
 import StatusMessage from '../components/StatusMessage.jsx'
 import StockList from '../components/StockList.jsx'
@@ -18,14 +18,15 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
   const fetchSpecsForMaterial = async (selectedMaterial) => {
     const cleanMaterial = String(selectedMaterial || '').trim()
+    const normalizedMaterial = extractMaterialParts(cleanMaterial).material || cleanMaterial
     const requestId = ++sizeRequestRef.current
 
     setSpesifikasi('')
     setAvailableSpecs([])
-    if (!cleanMaterial) return
+    if (!normalizedMaterial) return
 
     try {
-      const specs = cleanList(await apiGet('getSpecsByMaterial', { material: cleanMaterial }))
+      const specs = cleanList(await apiGet('getSpecsByMaterial', { material: normalizedMaterial }))
       if (requestId !== sizeRequestRef.current) return
       setAvailableSpecs(specs)
       if (specs.length === 1) setSpesifikasi(specs[0])
@@ -36,17 +37,18 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
   const fetchSizesForMaterial = async (selectedMaterial, selectedSpec = '') => {
     const cleanMaterial = String(selectedMaterial || '').trim()
+    const normalizedMaterial = extractMaterialParts(cleanMaterial).material || cleanMaterial
     const requestId = ++sizeRequestRef.current
 
     setSaiz('')
     setAvailableSizes([])
-    if (!cleanMaterial) return
+    if (!normalizedMaterial) return
 
     setIsLoadingSizes(true)
     try {
       const sizes = cleanList(
         await apiGet('getSizesByMaterial', {
-          material: cleanMaterial,
+          material: normalizedMaterial,
           spesifikasi: selectedSpec,
         }),
       )
