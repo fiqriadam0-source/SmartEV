@@ -89,8 +89,8 @@ function TelegramPage({ theme }) {
       <div className={`rounded-3xl border p-6 shadow-2xl backdrop-blur-lg sm:p-8 ${theme.panel}`}>
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className={`font-display text-3xl text-slate-900 ${theme.heading}`}>History Usage</h2>
-            <p className="mt-2 text-sm text-slate-500">Senarai penggunaan bahan terkini termasuk saiz dan rekod terbaharu.</p>
+            <h2 className={`font-display text-3xl text-slate-900 ${theme.heading}`}>REKOD PERMOHONAN</h2>
+            <p className="mt-2 text-sm text-slate-500">SEJARAH PERMOHONAN BARANG TERKINI TERMASUK SAIZ DAN REKOD TERBAHARU.</p>
           </div>
 
           <button

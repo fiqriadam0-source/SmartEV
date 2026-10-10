@@ -4,7 +4,7 @@ function StockPage({ theme, stockState }) {
   return (
     <div className={`rounded-3xl border p-6 shadow-xl sm:p-8 ${theme.sidePanel}`}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h2 className={`font-display text-3xl ${theme.heading}`}>Senarai Stock</h2>
+        <h2 className={`font-display text-3xl ${theme.heading}`}>Senarai Barang</h2>
         <button
           type="button"
           onClick={stockState.reload}

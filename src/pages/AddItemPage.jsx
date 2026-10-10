@@ -73,13 +73,13 @@ function AddItemPage({ theme, stockState }) {
         className="reveal reveal-2 lift-card rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10 sm:p-8"
       >
         <div className="mb-6 flex items-center justify-between gap-3">
-          <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}>Tambah Item Baru</h2>
+          <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}> Daftar Barang Baharu</h2>
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
             Admin
           </span>
         </div>
 
-        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Nama Bahan</label>
+        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Nama Barang</label>
         <input
           type="text"
           value={material}
