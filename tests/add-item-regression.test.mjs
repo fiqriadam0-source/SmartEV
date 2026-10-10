@@ -34,6 +34,14 @@ test('Restock logic prioritises the exact specification before the blank-spec fa
 
 test('Material labels with size suffix are normalized before spec and size matching', () => {
   const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
-  assert.match(backendText, /splitMaterialLabel\(material\)|materialInfo\.material\s*\|\|\s*material/i)
+  assert.match(backendText, /splitMaterialLabel\(material\)|splitMaterialLabel\(rowMaterial\)|materialInfo\.material\s*\|\|\s*material/i)
   assert.match(backendText, /sameSpec\s*=\s*.*rowSpec.*spesifikasi|sameSize\s*=\s*.*rowSize.*targetSize/i)
+})
+
+test('Stock material rows with size suffix still match the base material during restock spec lookup', () => {
+  const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
+  assert.match(
+    backendText,
+    /rowMaterial\s*=\s*String\(data\[i\]\[0\]\s*\|\|\s*""\)\.trim\(\);\s*var\s*rowMaterialInfo\s*=\s*splitMaterialLabel\(rowMaterial\);\s*var\s*rowMaterialName\s*=\s*\(rowMaterialInfo\.material\s*\|\|\s*rowMaterial\)\.trim\(\);/m,
+  )
 })

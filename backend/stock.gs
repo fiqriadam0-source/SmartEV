@@ -178,9 +178,11 @@ function doGet(e) {
 
     for (var i = 1; i < data.length; i++) {
       var rowMaterial = String(data[i][0] || "").trim();
+      var rowMaterialInfo = splitMaterialLabel(rowMaterial);
+      var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSpec = String(data[i][6] || "").trim();
 
-      if (rowMaterial.toLowerCase() === materialName.toLowerCase() && rowSpec) {
+      if (rowMaterialName.toLowerCase() === materialName.toLowerCase() && rowSpec) {
         var key = rowSpec.toLowerCase();
         if (!seen[key]) {
           specs.push(rowSpec);
@@ -210,9 +212,11 @@ function doGet(e) {
 
     for (var i = 1; i < data.length; i++) {
       var rowMaterial = String(data[i][0] || "").trim();
+      var rowMaterialInfo = splitMaterialLabel(rowMaterial);
+      var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
-      var sameMaterial = rowMaterial.toLowerCase() === materialName.toLowerCase();
+      var sameMaterial = rowMaterialName.toLowerCase() === materialName.toLowerCase();
       var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
 
       if (sameMaterial && rowSize && sameSpec) {
@@ -245,9 +249,11 @@ function doGet(e) {
 
     for (var i = 1; i < data.length; i++) {
       var rowMaterial = String(data[i][0] || "").trim();
+      var rowMaterialInfo = splitMaterialLabel(rowMaterial);
+      var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
-      var sameName = rowMaterial.toLowerCase() === materialName.toLowerCase();
+      var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
       var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
       var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
 
@@ -429,9 +435,11 @@ function doPost(e) {
 
       for (var i = 1; i < data.length; i++) {
         var rowMaterial = String(data[i][0] || "").trim();
+        var rowMaterialInfo = splitMaterialLabel(rowMaterial);
+        var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(data[i][5] || "").trim();
         var rowSpec = String(data[i][6] || "").trim();
-        var sameName = rowMaterial.toLowerCase() === materialName.toLowerCase();
+        var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
         var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
         var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
 
@@ -471,9 +479,11 @@ function doPost(e) {
 
       for (var i = 1; i < data.length; i++) {
         var rowMaterial = String(data[i][0] || "").trim();
+        var rowMaterialInfo = splitMaterialLabel(rowMaterial);
+        var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(data[i][5] || "").trim();
         var rowSpec = String(data[i][6] || "").trim();
-        var sameName = rowMaterial.toLowerCase() === materialName.toLowerCase();
+        var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
         var sameSize = !targetSize || !rowSize || rowSize.toLowerCase() === targetSize.toLowerCase();
 
         if (!sameName || !sameSize) continue;
@@ -559,9 +569,11 @@ function doPost(e) {
 
       for (var i = 1; i < stockData.length; i++) {
         var rowMaterial = String(stockData[i][0] || "").trim();
+        var rowMaterialInfo = splitMaterialLabel(rowMaterial);
+        var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(stockData[i][5] || "").trim();
         var rowSpec = String(stockData[i][6] || "").trim();
-        var sameName = rowMaterial.toLowerCase() === materialName.toLowerCase();
+        var sameName = rowMaterialName.toLowerCase() === materialName.toLowerCase();
         var sameSize = !targetSize || (rowSize && rowSize.toLowerCase() === targetSize.toLowerCase());
         var sameSpec = !targetSpec || !rowSpec || rowSpec.toLowerCase() === targetSpec.toLowerCase();
 
