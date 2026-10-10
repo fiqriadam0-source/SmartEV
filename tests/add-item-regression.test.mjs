@@ -50,3 +50,11 @@ test('Material matching ignores uppercase spelling and repeated spaces', () => {
   const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
   assert.match(backendText, /normalizeText\(value\)|normalizeText\(rowMaterialName\) === normalizeText\(materialName\)/)
 })
+
+test('Restock page uses separate request counters for spec and size lookups', () => {
+  const restockPage = fs.readFileSync(path.join(repoRoot, 'src/pages/RestockPage.jsx'), 'utf8')
+  assert.match(restockPage, /const\s+specRequestRef\s*=\s*useRef\(0\)/)
+  assert.match(restockPage, /const\s+sizeRequestRef\s*=\s*useRef\(0\)/)
+  assert.match(restockPage, /requestId\s*=\s*\+\+specRequestRef\.current/)
+  assert.match(restockPage, /requestId\s*=\s*\+\+sizeRequestRef\.current/)
+})

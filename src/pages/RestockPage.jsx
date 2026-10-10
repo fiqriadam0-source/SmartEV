@@ -14,6 +14,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
   const [isLoadingSizes, setIsLoadingSizes] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+  const specRequestRef = useRef(0)
   const sizeRequestRef = useRef(0)
 
   const normalizeMaterial = (value) => {
@@ -25,7 +26,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
   const fetchSpecsForMaterial = async (selectedMaterial) => {
     const cleanMaterial = String(selectedMaterial || '').trim()
     const normalizedMaterial = normalizeMaterial(cleanMaterial)
-    const requestId = ++sizeRequestRef.current
+    const requestId = ++specRequestRef.current
 
     setSpesifikasi('')
     setAvailableSpecs([])
@@ -33,14 +34,14 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
     try {
       const specs = cleanList(await apiGet('getSpecsByMaterial', { material: normalizedMaterial }))
-      if (requestId !== sizeRequestRef.current) return
+      if (requestId !== specRequestRef.current) return
       setAvailableSpecs(specs)
       if (specs.length === 1) {
         setSpesifikasi(specs[0])
         await fetchSizesForMaterial(cleanMaterial, specs[0])
       }
     } catch {
-      if (requestId === sizeRequestRef.current) setAvailableSpecs([])
+      if (requestId === specRequestRef.current) setAvailableSpecs([])
     }
   }
 
