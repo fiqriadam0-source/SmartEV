@@ -256,7 +256,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
       <aside className={`reveal reveal-3 lift-card rounded-3xl border p-6 shadow-xl shadow-slate-900/30 sm:p-8 ${theme.sidePanel}`}>
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h3 className={`font-display text-2xl leading-tight ${theme.heading}`}>Maklumat Stock</h3>
+          <h3 className={`font-display text-2xl leading-tight ${theme.heading}`}>Senarai Barang</h3>
           <button
             type="button"
             onClick={stockState.reload}
