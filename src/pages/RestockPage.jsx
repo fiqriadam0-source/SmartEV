@@ -161,7 +161,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
           </span>
         </div>
 
-        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Material</label>
+        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">BARANG</label>
         <div className="mb-6">
           <MaterialCombobox
             value={material}
@@ -177,7 +177,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
                 handleMaterialChange(material)
               }
             }}
-            placeholder={isLoadingMaterials ? 'Memuat material...' : 'Taip atau pilih material'}
+            placeholder={isLoadingMaterials ? 'Memuat Barang...' : 'Taip atau pilih barang'}
             disabled={isLoadingMaterials || isSubmitting}
             inputFocus={theme.inputFocus}
           />
@@ -194,7 +194,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
         >
           <option value="">
             {!material.trim()
-              ? 'Pilih material dahulu'
+              ? 'Pilih Barang Dahulu'
               : isLoadingSizes
                 ? 'Memuat spesifikasi...'
                 : availableSpecs.length === 0
@@ -217,11 +217,11 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
         >
           <option value="">
             {!material.trim()
-              ? 'Pilih material dahulu'
+              ? 'Pilih Barang Dahulu'
               : isLoadingSizes
                 ? 'Memuat saiz...'
                 : availableSizes.length === 0
-                  ? 'Tiada saiz untuk material ini'
+                  ? 'Tiada saiz untuk Barang ini'
                   : 'Pilih saiz'}
           </option>
           {availableSizes.map((sizeOption) => (

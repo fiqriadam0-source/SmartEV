@@ -147,7 +147,7 @@ function AddItemPage({ theme, stockState }) {
           disabled={isSubmitting}
           className={`mt-7 w-full rounded-xl px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition disabled:cursor-not-allowed disabled:bg-slate-400 ${theme.accent}`}
         >
-          {isSubmitting ? 'Menyimpan...' : 'Tambah Item'}
+          {isSubmitting ? 'Menyimpan...' : 'Tambah Barang Baharu'}
         </button>
 
         <StatusMessage status={status} className="mt-5" />
