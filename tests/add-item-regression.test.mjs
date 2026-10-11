@@ -65,3 +65,9 @@ test('Telegram announcements use the updated wording and support new-user alerts
   assert.match(backendText, /PENAMBAHAN STOK BERJAYA|penambahan stok berjaya/i)
   assert.match(backendText, /sendTelegramNewUser|PENDAFTARAN PENGGUNA BARU|new user/i)
 })
+
+test('Usage request history includes specification details and keeps items distinct by specification', () => {
+  const telegramPage = fs.readFileSync(path.join(repoRoot, 'src/pages/TelegramPage.jsx'), 'utf8')
+  assert.match(telegramPage, /spesifikasi|Spesifikasi/i)
+  assert.match(telegramPage, /itemKey.*spesifikasi|row\.spesifikasi|row\[7\]|item\.spesifikasi/i)
+})

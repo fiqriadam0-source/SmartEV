@@ -13,6 +13,7 @@ function normalizeHistoryRows(payload) {
           qty: String(row[3] ?? '').trim(),
           unit: String(row[4] ?? '').trim(),
           saiz: String(row[6] ?? '').trim(),
+          spesifikasi: String(row[7] ?? '').trim(),
           tujuan: String(row[5] ?? '').trim(),
         }
       }
@@ -24,6 +25,7 @@ function normalizeHistoryRows(payload) {
           qty: String(row.kuantiti ?? row.quantity ?? row.qty ?? '').trim(),
           unit: String(row.unit ?? '').trim(),
           saiz: String(row.saiz ?? row.size ?? row.saiz_material ?? '').trim(),
+          spesifikasi: String(row.spesifikasi ?? row.spec ?? row.specification ?? '').trim(),
           tujuan: String(row.tujuan ?? row.purpose ?? '').trim(),
         }
       }
@@ -49,6 +51,7 @@ function normalizeHistoryRows(payload) {
             qty: row.qty,
             unit: row.unit,
             saiz: row.saiz,
+            spesifikasi: row.spesifikasi,
           },
         ],
       }
@@ -57,9 +60,9 @@ function normalizeHistoryRows(payload) {
       return
     }
 
-    const itemKey = `${(row.material || '').toLowerCase()}|${(row.saiz || '').toLowerCase()}`
+    const itemKey = `${(row.material || '').toLowerCase()}|${(row.saiz || '').toLowerCase()}|${(row.spesifikasi || '').toLowerCase()}`
     const currentItem = existing.items.find((item) => {
-      const key = `${(item.material || '').toLowerCase()}|${(item.saiz || '').toLowerCase()}`
+      const key = `${(item.material || '').toLowerCase()}|${(item.saiz || '').toLowerCase()}|${(item.spesifikasi || '').toLowerCase()}`
       return key === itemKey
     })
 
@@ -74,6 +77,7 @@ function normalizeHistoryRows(payload) {
       qty: row.qty,
       unit: row.unit,
       saiz: row.saiz,
+      spesifikasi: row.spesifikasi,
     })
   })
 
@@ -137,10 +141,11 @@ function TelegramPage({ theme }) {
 
                 <div className="mt-3 space-y-2 rounded-xl bg-slate-50/80 p-3">
                   {row.items.map((item, itemIndex) => (
-                    <div key={`${row.date}-${item.material}-${item.saiz}-${itemIndex}`} className="flex flex-col gap-1 border-b border-slate-200 pb-2 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                    <div key={`${row.date}-${item.material}-${item.saiz}-${item.spesifikasi || 'no-spec'}-${itemIndex}`} className="flex flex-col gap-1 border-b border-slate-200 pb-2 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-semibold text-slate-900">{item.material || '-'}</p>
                         {item.saiz && <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Saiz: {item.saiz}</p>}
+                        {item.spesifikasi && <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Spesifikasi: {item.spesifikasi}</p>}
                       </div>
                       <p className="font-bold text-slate-700">
                         {item.qty || '-'} {item.unit || ''}
