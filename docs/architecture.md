@@ -57,6 +57,7 @@ Constraints that shape the frontend:
 - POSTs are sent as `FormData` and read with `e.parameter`. Replies are plain text, and the frontend matches on substrings (`Berjaya`, `Restock Success`, `Telegram Success`, `Error`).
 - Apps Script web apps do not answer CORS preflight (`OPTIONS`). Requests must stay "simple": no custom headers such as `Authorization`, no JSON content type. Pass extra data as form fields or query parameters.
 - Telegram token and chat ID are read from **Script Properties** `TELEGRAM_TOKEN` and `TELEGRAM_CHAT_ID`. Never put them in code or in `VITE_*` variables.
+- New sign-ups trigger a Telegram alert through the Apps Script `newUser` action so admins can approve the first-time registration quickly.
 
 ### Google Sheet
 

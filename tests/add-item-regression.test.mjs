@@ -58,3 +58,10 @@ test('Restock page uses separate request counters for spec and size lookups', ()
   assert.match(restockPage, /requestId\s*=\s*\+\+specRequestRef\.current/)
   assert.match(restockPage, /requestId\s*=\s*\+\+sizeRequestRef\.current/)
 })
+
+test('Telegram announcements use the updated wording and support new-user alerts', () => {
+  const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
+  assert.match(backendText, /PERMOHONAN PENGELUARAN BARANG/i)
+  assert.match(backendText, /PENAMBAHAN STOK BERJAYA|penambahan stok berjaya/i)
+  assert.match(backendText, /sendTelegramNewUser|PENDAFTARAN PENGGUNA BARU|new user/i)
+})

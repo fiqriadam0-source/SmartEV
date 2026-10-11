@@ -2,6 +2,24 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase.js'
 import StatusMessage from '../../components/StatusMessage.jsx'
 
+const API_URL = import.meta.env.VITE_API_URL
+
+async function notifyNewUser(fullName, email) {
+  if (!API_URL) return
+
+  try {
+    const body = new FormData()
+    body.append('type', 'newUser')
+    body.append('full_name', fullName.trim())
+    body.append('email', email.trim())
+    body.append('role', 'staff')
+
+    await fetch(API_URL, { method: 'POST', body })
+  } catch (error) {
+    console.warn('New-user Telegram notification failed:', error)
+  }
+}
+
 function SignUpPage({ theme, onSwitchToLogin }) {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -34,8 +52,10 @@ function SignUpPage({ theme, onSwitchToLogin }) {
       setStatus({ type: 'error', message: error.message })
     } else if (data.session) {
       // "Confirm email" is off: signUp already returns a session, App.jsx will switch to the pending-approval screen.
+      await notifyNewUser(fullName, email)
       setStatus({ type: 'success', message: 'Pendaftaran berjaya. Menunggu kelulusan admin.' })
     } else {
+      await notifyNewUser(fullName, email)
       setStatus({ type: 'success', message: 'Semak emel untuk pengesahan, kemudian log masuk.' })
     }
     setIsSubmitting(false)

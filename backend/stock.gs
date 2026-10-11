@@ -403,6 +403,24 @@ function doPost(e) {
       );
     }
 
+    if (type === "newUser" || e.parameter.action === "newUser") {
+      var webhookSecret = (getScriptProp('WEBHOOK_SECRET') || '').trim();
+      var providedSecret = (e.parameter.secret || '').trim();
+      if (webhookSecret && providedSecret !== webhookSecret) {
+        return ContentService.createTextOutput('Error: INVALID_SECRET');
+      }
+
+      var fullName = (e.parameter.full_name || e.parameter.nama || '').trim();
+      var email = (e.parameter.email || '').trim();
+      var role = (e.parameter.role || 'staff').trim();
+      if (!email) {
+        return ContentService.createTextOutput('Error: Email pengguna diperlukan');
+      }
+
+      sendTelegramNewUser(fullName || 'Pengguna Baru', email, role || 'staff');
+      return ContentService.createTextOutput('New user notification sent');
+    }
+
     // ==================== ADD ITEM ====================
     if (type === "addItem") {
       var material = (e.parameter.material || "").trim();
@@ -517,7 +535,11 @@ function doPost(e) {
         stockSheet.getRange(rowIndex + 1, 4).setValue(bakiBaru);
 
         restockSheet.appendRow([new Date(), materialName, kuantiti, targetSize || rowSize, spesifikasi || rowSpec]);
-        sendTelegramRestock(materialName + (targetSize ? " (" + targetSize + ")" : "") + (spesifikasi ? " - " + spesifikasi : ""), kuantiti);
+        sendTelegramRestock(
+          materialName + (targetSize ? " (" + targetSize + ")" : ""),
+          kuantiti,
+          spesifikasi || rowSpec
+        );
 
         return ContentService.createTextOutput("Restock Success");
       }
@@ -666,10 +688,11 @@ function sendTelegram(text, parseMode) {
   }
 }
 
-function sendTelegramUsage(nama, material, kuantiti, unit, tujuan, saiz) {
-  var msg = "📦 Material Dipinjam\n" +
+function sendTelegramUsage(nama, material, kuantiti, unit, tujuan, saiz, spesifikasi) {
+  var specText = spesifikasi ? "\n📄 Spesifikasi: " + spesifikasi : "";
+  var msg = "📦 PERMOHONAN PENGELUARAN BARANG\n" +
             "👤 Nama: " + nama + "\n" +
-            "📦 Material: " + material + (saiz ? " (" + saiz + ")" : "") + "\n" +
+            "📦 Material: " + material + (saiz ? " (" + saiz + ")" : "") + specText + "\n" +
             "🔢 Kuantiti: " + kuantiti +
             (unit ? " " + unit : "") + "\n" +
             "📍 Tujuan: " + tujuan;
@@ -681,8 +704,9 @@ function sendTelegramUsage(nama, material, kuantiti, unit, tujuan, saiz) {
   }
 }
 
-function sendTelegramAlert(material, baki) {
-  var msg = "⚠️ STOCK RENDAH\nMaterial: " + material + "\nBaki Tinggal: " + baki;
+function sendTelegramAlert(material, baki, spesifikasi) {
+  var specText = spesifikasi ? "\n📄 Spesifikasi: " + spesifikasi : "";
+  var msg = "⚠️ STOCK RENDAH\nMaterial: " + material + specText + "\nBaki Tinggal: " + baki;
 
   try {
     sendTelegram(msg);
@@ -691,8 +715,9 @@ function sendTelegramAlert(material, baki) {
   }
 }
 
-function sendTelegramOutOfStock(material) {
-  var msg = "❌ STOCK HABIS\nMaterial: " + material;
+function sendTelegramOutOfStock(material, spesifikasi) {
+  var specText = spesifikasi ? "\n📄 Spesifikasi: " + spesifikasi : "";
+  var msg = "❌ STOCK HABIS\nMaterial: " + material + specText;
 
   try {
     sendTelegram(msg);
@@ -701,13 +726,29 @@ function sendTelegramOutOfStock(material) {
   }
 }
 
-function sendTelegramRestock(material, kuantiti) {
-  var msg = "🔄 RESTOCK BARANG\nMaterial: " + material + "\nKuantiti Tambah: " + kuantiti;
+function sendTelegramRestock(material, kuantiti, spesifikasi) {
+  var specText = spesifikasi ? "\n📄 Spesifikasi: " + spesifikasi : "";
+  var msg = "✅ PENAMBAHAN STOK BERJAYA\nMaterial: " + material + specText + "\nKuantiti Tambah: " + kuantiti;
 
   try {
     sendTelegram(msg);
   } catch(err) {
     Logger.log("Telegram restock error: " + err);
+  }
+}
+
+function sendTelegramNewUser(nama, email, role) {
+  var msg = "🆕 PENDAFTARAN PENGGUNA BARU\n" +
+            "👤 Nama: " + (nama || 'Pengguna Baru') + "\n" +
+            "📧 Emel: " + email + "\n" +
+            "🔐 Peranan: " + (role || 'staff') + "\n" +
+            "⏳ Status: pending\n" +
+            "🕒 Masa: " + new Date().toLocaleString('ms-MY');
+
+  try {
+    sendTelegram(msg);
+  } catch(err) {
+    Logger.log("Telegram new user error: " + err);
   }
 }
 // ======================
@@ -739,7 +780,7 @@ function getMaterialList() {
 // TELEGRAM USAGE MULTI (dengan Unit)
 // ======================
 function sendTelegramUsageMulti(nama, tujuan, items) {
-  var msg = "📦 **Material Dipinjam (Multi)**\n" +
+  var msg = "📦 PERMOHONAN PENGELUARAN BARANG\n" +
             "👤 Nama: " + nama + "\n" +
             "📍 Tujuan: " + tujuan + "\n\n" +
             "📋 Senarai Barang:\n";
@@ -747,7 +788,8 @@ function sendTelegramUsageMulti(nama, tujuan, items) {
   items.forEach(function(item) {
     var unitText = item.unit ? " " + item.unit : "";
     var sizeText = item.saiz ? " (" + item.saiz + ")" : "";
-    msg += "• " + item.material + sizeText + " → " + item.kuantiti + unitText + "\n";
+    var specText = item.spesifikasi ? " - " + item.spesifikasi : "";
+    msg += "• " + (item.material || "") + sizeText + specText + " → " + item.kuantiti + unitText + "\n";
   });
 
   msg += "\nJumlah barang: " + items.length + "\n📌 Rekod terbaru: " + new Date().toLocaleString('ms-MY');
