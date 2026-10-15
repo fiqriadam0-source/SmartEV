@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { apiPost } from '../api.js'
+import { useEffect, useState } from 'react'
+import { apiGet, apiPost, cleanList } from '../api.js'
 import StatusMessage from '../components/StatusMessage.jsx'
 
 const ADD_ITEM_ENABLED = true
@@ -7,12 +7,30 @@ const ADD_ITEM_ENABLED = true
 function AddItemPage({ theme, stockState }) {
   const [material, setMaterial] = useState('')
   const [kategori, setKategori] = useState('')
+  const [categoryOptions, setCategoryOptions] = useState([])
   const [spesifikasi, setSpesifikasi] = useState('')
   const [saiz, setSaiz] = useState('')
   const [stokAwal, setStokAwal] = useState('')
   const [minimum, setMinimum] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+
+  useEffect(() => {
+    let isMounted = true
+
+    apiGet('getCategories')
+      .then((result) => {
+        if (!isMounted) return
+        setCategoryOptions(cleanList(result))
+      })
+      .catch((error) => {
+        console.error('Gagal memuat kategori:', error)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -76,10 +94,10 @@ function AddItemPage({ theme, stockState }) {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+    <div className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
       <form
         onSubmit={handleSubmit}
-        className="reveal reveal-2 lift-card rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10 sm:p-8"
+        className="reveal reveal-2 lift-card rounded-3xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/10 sm:p-6 lg:p-8"
       >
         <div className="mb-6 flex items-center justify-between gap-3">
           <h2 className={`font-display text-2xl text-slate-900 ${theme.heading}`}> Daftar Barang Baharu</h2>
@@ -89,15 +107,18 @@ function AddItemPage({ theme, stockState }) {
         </div>
 
         <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Kategori</label>
-        <input
-          type="text"
+        <select
           value={kategori}
           onChange={(event) => setKategori(event.target.value)}
-          placeholder="Contoh: Sivil"
           className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
-          disabled={isSubmitting}
+          disabled={isSubmitting || categoryOptions.length === 0}
           required
-        />
+        >
+          <option value="">Pilih kategori</option>
+          {categoryOptions.map((categoryOption) => (
+            <option key={categoryOption} value={categoryOption}>{categoryOption}</option>
+          ))}
+        </select>
 
         <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Nama Barang</label>
         <input

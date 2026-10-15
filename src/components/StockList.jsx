@@ -42,16 +42,16 @@ function StockList({ stock, isLoading, error, theme, variant = 'compact' }) {
   const isGrid = variant === 'grid'
 
   return (
-    <div className={isGrid ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'max-h-96 space-y-3 overflow-y-auto pr-1'}>
+    <div className={isGrid ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'max-h-96 space-y-3 overflow-y-auto pr-1'}>
       {rows.map((item, index) => {
         const isLow = Number(item.baki) <= Number(item.minimum)
         return (
           <div
             key={`${item.material}-${item.saiz ?? ''}-${index}`}
-            className={`border ${isGrid ? 'rounded-2xl p-5' : 'rounded-xl p-4 text-sm'} ${theme.sideItem}`}
+            className={`border ${isGrid ? 'rounded-2xl p-4 sm:p-5' : 'rounded-xl p-4 text-sm'} ${theme.sideItem}`}
           >
             <div className="flex items-start justify-between gap-2">
-              <p className={`font-bold leading-tight ${isGrid ? 'text-lg' : ''}`}>{item.material}</p>
+              <p className={`font-bold leading-tight ${isGrid ? 'text-base sm:text-lg' : ''}`}>{item.material}</p>
               <span
                 className={`shrink-0 rounded-full font-bold ${isGrid ? 'px-2.5 py-1 text-sm' : 'px-2 py-0.5 text-xs'} ${
                   isLow ? 'bg-red-500/25 text-red-300' : 'bg-emerald-500/25 text-emerald-300'

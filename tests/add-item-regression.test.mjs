@@ -91,3 +91,15 @@ test('Usage flow sends out-of-stock notification after the final stock decrement
   const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
   assert.match(backendText, /stokDigunakan\s*\+=\s*kuantiti;[\s\S]*baki\s*=\s*stokAwal\s*-\s*stokDigunakan;[\s\S]*if\s*\(\s*baki\s*<=\s*0\s*\)/m)
 })
+
+test('Inventory page requires category selection before showing material list', () => {
+  const stockPage = fs.readFileSync(path.join(repoRoot, 'src/pages/StockPage.jsx'), 'utf8')
+  assert.match(stockPage, /selectedCategory|setSelectedCategory|Pilih kategori/i)
+  assert.match(stockPage, /filter\s*\(|stock\.filter|kategori/i)
+})
+
+test('Add-item page uses a category dropdown instead of free-text entry', () => {
+  const addItemPage = fs.readFileSync(path.join(repoRoot, 'src/pages/AddItemPage.jsx'), 'utf8')
+  assert.match(addItemPage, /<select[\s\S]*kategori|value=\{kategori\}[\s\S]*<option/i)
+  assert.doesNotMatch(addItemPage, /type="text"[\s\S]*value=\{kategori\}/i)
+})
