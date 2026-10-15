@@ -44,8 +44,8 @@ export async function apiPost(fields) {
   return response.text()
 }
 
-async function getArray(action, errorMessage) {
-  const data = await apiGet(action)
+async function getArray(action, errorMessage, params = {}) {
+  const data = await apiGet(action, params)
   if (Array.isArray(data)) return data
   if (data && typeof data === 'object' && data.error) {
     throw new Error(String(data.error))
@@ -54,6 +54,10 @@ async function getArray(action, errorMessage) {
 }
 
 export const fetchMaterials = async () => cleanList(await getArray('getMaterials', 'Format material tidak sah'))
+export const fetchCategories = async () => cleanList(await getArray('getCategories', 'Format kategori tidak sah'))
+export const fetchMaterialsByCategory = async (kategori) => cleanList(
+  await getArray('getMaterialsByCategory', 'Format material mengikut kategori tidak sah', { kategori }),
+)
 export const fetchStock = () => getArray('getStock', 'Format stock tidak sah')
 export const fetchUsageHistory = () => getArray('getUsageHistory', 'Format usage history tidak sah')
 

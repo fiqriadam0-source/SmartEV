@@ -8,13 +8,15 @@ function StockList({ stock, isLoading, error, theme, variant = 'compact' }) {
         const materialName = String(item.material || '').trim()
         const sizeName = String(item.saiz || '').trim()
         const specificationName = String(item.spesifikasi || '').trim()
+        const categoryName = String(item.kategori || '').trim()
         if (!materialName) return accumulator
 
-        const key = `${materialName.toLowerCase()}::${sizeName.toLowerCase()}::${specificationName.toLowerCase()}`
+        const key = `${materialName.toLowerCase()}::${sizeName.toLowerCase()}::${specificationName.toLowerCase()}::${categoryName.toLowerCase()}`
         const nextItem = {
           material: materialName,
           spesifikasi: specificationName,
           saiz: sizeName,
+          kategori: categoryName,
           baki: Number(item.baki) || 0,
           minimum: Number(item.minimum) || 0,
         }
@@ -58,6 +60,7 @@ function StockList({ stock, isLoading, error, theme, variant = 'compact' }) {
                 {item.baki}
               </span>
             </div>
+            {item.kategori && <p className={`mt-1 opacity-80 ${isGrid ? 'text-sm' : 'text-xs'}`}>Kategori: {item.kategori}</p>}
             {item.spesifikasi && <p className={`mt-1 opacity-80 ${isGrid ? 'text-sm' : 'text-xs'}`}>Spesifikasi: {item.spesifikasi}</p>}
             {item.saiz && <p className={`mt-1 opacity-80 ${isGrid ? 'text-sm' : 'text-xs'}`}>Saiz: {item.saiz}</p>}
             <p className={`mt-1 opacity-70 ${isGrid ? 'text-sm' : 'text-xs'}`}>Minimum: {item.minimum}</p>

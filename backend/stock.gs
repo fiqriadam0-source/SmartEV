@@ -164,10 +164,60 @@ function doGet(e) {
              .setMimeType(ContentService.MimeType.JSON);
   }
 
+  if (e.parameter.action === "getCategories") {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stock");
+    const data = sheet.getDataRange().getValues();
+    var categories = [];
+    var seen = {};
+
+    for (var i = 1; i < data.length; i++) {
+      var category = String(data[i][7] || "").trim();
+      if (!category) continue;
+      var key = category.toLowerCase();
+      if (!seen[key]) {
+        categories.push(category);
+        seen[key] = true;
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(categories.sort()))
+             .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (e.parameter.action === "getMaterialsByCategory") {
+    var category = (e.parameter.kategori || e.parameter.category || "").trim();
+    if (!category) {
+      return ContentService.createTextOutput(JSON.stringify([]))
+               .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stock");
+    const data = sheet.getDataRange().getValues();
+    var materials = [];
+    var seen = {};
+
+    for (var i = 1; i < data.length; i++) {
+      var rowCategory = String(data[i][7] || "").trim();
+      var materialName = String(data[i][0] || "").trim();
+      if (!materialName || !rowCategory) continue;
+      if (normalizeText(rowCategory) !== normalizeText(category)) continue;
+
+      var key = materialName.toLowerCase();
+      if (!seen[key]) {
+        materials.push(materialName);
+        seen[key] = true;
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(materials.sort()))
+             .setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (e.parameter.action === "getSpecsByMaterial") {
     var material = (e.parameter.material || "").trim();
     var materialInfo = splitMaterialLabel(material);
     var materialName = materialInfo.material || material;
+    var targetCategory = (e.parameter.kategori || e.parameter.category || "").trim();
     if (!materialName) {
       return ContentService.createTextOutput(JSON.stringify([]))
                .setMimeType(ContentService.MimeType.JSON);
@@ -183,8 +233,10 @@ function doGet(e) {
       var rowMaterialInfo = splitMaterialLabel(rowMaterial);
       var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSpec = String(data[i][6] || "").trim();
+      var rowCategory = String(data[i][7] || "").trim();
+      var sameCategory = !targetCategory || normalizeText(rowCategory) === normalizeText(targetCategory);
 
-      if (normalizeText(rowMaterialName) === normalizeText(materialName) && rowSpec) {
+      if (normalizeText(rowMaterialName) === normalizeText(materialName) && rowSpec && sameCategory) {
         var key = rowSpec.toLowerCase();
         if (!seen[key]) {
           specs.push(rowSpec);
@@ -202,6 +254,7 @@ function doGet(e) {
     var materialInfo = splitMaterialLabel(material);
     var materialName = materialInfo.material || material;
     var targetSpec = (e.parameter.spesifikasi || "").trim();
+    var targetCategory = (e.parameter.kategori || e.parameter.category || "").trim();
     if (!materialName) {
       return ContentService.createTextOutput(JSON.stringify([]))
                .setMimeType(ContentService.MimeType.JSON);
@@ -218,10 +271,12 @@ function doGet(e) {
       var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
+      var rowCategory = String(data[i][7] || "").trim();
       var sameMaterial = normalizeText(rowMaterialName) === normalizeText(materialName);
       var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
+      var sameCategory = !targetCategory || normalizeText(rowCategory) === normalizeText(targetCategory);
 
-      if (sameMaterial && rowSize && sameSpec) {
+      if (sameMaterial && rowSize && sameSpec && sameCategory) {
         var key = rowSize.toLowerCase();
         if (!seen[key]) {
           sizes.push(rowSize);
@@ -240,6 +295,7 @@ function doGet(e) {
     var materialName = materialInfo.material || material;
     var targetSize = (e.parameter.saiz || "").trim();
     var targetSpec = (e.parameter.spesifikasi || "").trim();
+    var targetCategory = (e.parameter.kategori || e.parameter.category || "").trim();
 
     if (!materialName) {
       return ContentService.createTextOutput(JSON.stringify({ error: "Material tidak dinyatakan" }))
@@ -255,17 +311,20 @@ function doGet(e) {
       var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
       var rowSize = String(data[i][5] || "").trim();
       var rowSpec = String(data[i][6] || "").trim();
+      var rowCategory = String(data[i][7] || "").trim();
       var sameName = normalizeText(rowMaterialName) === normalizeText(materialName);
       var sameSize = !targetSize || !rowSize || normalizeText(rowSize) === normalizeText(targetSize);
       var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
+      var sameCategory = !targetCategory || normalizeText(rowCategory) === normalizeText(targetCategory);
 
-      if (sameName && sameSize && sameSpec) {
+      if (sameName && sameSize && sameSpec && sameCategory) {
         return ContentService.createTextOutput(JSON.stringify({
           material: rowMaterial,
           baki: data[i][3],
           minimum: data[i][4],
           saiz: rowSize,
-          spesifikasi: rowSpec
+          spesifikasi: rowSpec,
+          kategori: rowCategory
         })).setMimeType(ContentService.MimeType.JSON);
       }
     }
@@ -290,6 +349,7 @@ function doGet(e) {
       var materialInfo = splitMaterialLabel(materialLabel);
       var rowSize = String(data[i][6] || "").trim() || (materialInfo.size || "").trim();
       var rowSpec = String(data[i][7] || "").trim();
+      var rowCategory = String(data[i][8] || "").trim();
 
       history.push({
         timestamp : data[i][0] ? new Date(data[i][0]).toLocaleString('ms-MY') : "",
@@ -299,7 +359,8 @@ function doGet(e) {
         unit      : data[i][4],
         tujuan    : data[i][5],
         saiz      : rowSize,
-        spesifikasi: rowSpec
+        spesifikasi: rowSpec,
+        kategori  : rowCategory
       });
     }
 
@@ -324,15 +385,17 @@ function doGet(e) {
       var materialName = (materialInfo.material || rawMaterial).trim();
       var size = String(data[i][5] || "").trim() || (materialInfo.size || "").trim();
       var spesifikasi = String(data[i][6] || "").trim();
+      var kategori = String(data[i][7] || "").trim();
       var baki = Number(data[i][3]) || 0;
       var minimum = Number(data[i][4]) || 0;
-      var key = (materialName + "::" + size + "::" + spesifikasi).toLowerCase();
+      var key = (materialName + "::" + size + "::" + spesifikasi + "::" + kategori).toLowerCase();
 
       if (!stockMap[key]) {
         stockMap[key] = {
           material: materialName,
           spesifikasi: spesifikasi,
           saiz: size,
+          kategori: kategori,
           baki: baki,
           minimum: minimum
         };
@@ -350,6 +413,9 @@ function doGet(e) {
       }
       if (!stockMap[key].spesifikasi && spesifikasi) {
         stockMap[key].spesifikasi = spesifikasi;
+      }
+      if (!stockMap[key].kategori && kategori) {
+        stockMap[key].kategori = kategori;
       }
     }
 
@@ -424,6 +490,7 @@ function doPost(e) {
       var material = (e.parameter.material || "").trim();
       var spesifikasi = (e.parameter.spesifikasi || "").trim();
       var saiz = (e.parameter.saiz || "").trim();
+      var kategori = (e.parameter.kategori || "").trim();
       var stokAwal = Number(e.parameter.stokAwal) || 0;
       var minimum = Number(e.parameter.minimum) || 0;
 
@@ -433,6 +500,9 @@ function doPost(e) {
 
       if (!material) {
         return ContentService.createTextOutput("Error: Nama bahan diperlukan");
+      }
+      if (!kategori) {
+        return ContentService.createTextOutput("Error: Kategori bahan diperlukan");
       }
       if (isNaN(stokAwal) || stokAwal < 0) {
         return ContentService.createTextOutput("Error: Stok awal tidak sah");
@@ -459,16 +529,18 @@ function doPost(e) {
         var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(data[i][5] || "").trim();
         var rowSpec = String(data[i][6] || "").trim();
+        var rowCategory = String(data[i][7] || "").trim();
         var sameName = normalizeText(rowMaterialName) === normalizeText(materialName);
         var sameSize = !targetSize || !rowSize || normalizeText(rowSize) === normalizeText(targetSize);
         var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
+        var sameCategory = normalizeText(rowCategory) === normalizeText(kategori);
 
-        if (sameName && sameSize && sameSpec) {
-          return ContentService.createTextOutput("Error: Item dengan bahan, spesifikasi dan saiz yang sama sudah wujud");
+        if (sameName && sameSize && sameSpec && sameCategory) {
+          return ContentService.createTextOutput("Error: Item dengan bahan, spesifikasi, saiz dan kategori yang sama sudah wujud");
         }
       }
 
-      stockSheet.appendRow([materialName, stokAwal, 0, stokAwal, minimum, targetSize, targetSpec]);
+      stockSheet.appendRow([materialName, stokAwal, 0, stokAwal, minimum, targetSize, targetSpec, kategori]);
       return ContentService.createTextOutput("Item baru berjaya ditambah ke Stock.");
     }
 
@@ -580,6 +652,7 @@ function doPost(e) {
       var kuantiti = Number(item.kuantiti) || 0;
       var unit     = (item.unit || "").trim();
       var itemSize = String(item.saiz || "").trim();
+      var category = String(item.kategori || "").trim();
       var materialInfo = splitMaterialLabel(material);
       var materialName = materialInfo.material || material;
       var targetSize = itemSize || materialInfo.size || "";
@@ -587,6 +660,10 @@ function doPost(e) {
 
       if (!material || kuantiti <= 0) {
         return ContentService.createTextOutput("Error: Data tidak lengkap untuk " + material);
+      }
+
+      if (material && !category) {
+        return ContentService.createTextOutput("Error: Kategori untuk " + material + " diperlukan");
       }
 
       var found = false;
@@ -597,11 +674,13 @@ function doPost(e) {
         var rowMaterialName = (rowMaterialInfo.material || rowMaterial).trim();
         var rowSize = String(stockData[i][5] || "").trim();
         var rowSpec = String(stockData[i][6] || "").trim();
+        var rowCategory = String(stockData[i][7] || "").trim();
         var sameName = normalizeText(rowMaterialName) === normalizeText(materialName);
         var sameSize = !targetSize || (rowSize && normalizeText(rowSize) === normalizeText(targetSize));
         var sameSpec = !targetSpec || !rowSpec || normalizeText(rowSpec) === normalizeText(targetSpec);
+        var sameCategory = !category || normalizeText(rowCategory) === normalizeText(category);
 
-        if (sameName && sameSize && sameSpec) {
+        if (sameName && sameSize && sameSpec && sameCategory) {
 
           var stokAwal     = Number(stockData[i][1]) || 0;
           var stokDigunakan = Number(stockData[i][2]) || 0;
@@ -625,7 +704,7 @@ function doPost(e) {
           stockSheet.getRange(i + 1, 3).setValue(stokDigunakan);
           stockSheet.getRange(i + 1, 4).setValue(baki);
 
-          usageSheet.appendRow([timestamp, nama, materialName, kuantiti, unit, tujuan, targetSize || "", targetSpec || ""]);
+          usageSheet.appendRow([timestamp, nama, materialName, kuantiti, unit, tujuan, targetSize || "", targetSpec || "", category || ""]);
 
           var stockMinimum = Number(stockData[i][4]) || 0;
           if (baki <= 0) {

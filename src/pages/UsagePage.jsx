@@ -13,6 +13,7 @@ function createEmptyItem() {
   rowCounter += 1
   return {
     id: rowCounter,
+    kategori: '',
     material: '',
     spesifikasi: '',
     kuantiti: '',
@@ -55,8 +56,25 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
   const [nama, setNama] = useState(defaultNama || '')
   const [tujuan, setTujuan] = useState('')
   const [items, setItems] = useState(() => [createEmptyItem()])
+  const [categoryOptions, setCategoryOptions] = useState([])
+  const [materialOptionsByCategory, setMaterialOptionsByCategory] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState({ type: 'idle', message: '' })
+
+  useEffect(() => {
+    let isMounted = true
+    apiGet('getCategories')
+      .then((result) => {
+        if (!isMounted) return
+        setCategoryOptions(cleanList(result))
+      })
+      .catch((error) => {
+        console.error('Gagal memuat kategori:', error)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const lookupTimersRef = useRef({})
   // Per-row request counters: a response is applied only if no newer lookup started since.
@@ -81,21 +99,40 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     )
   }
 
-  const fetchSpecs = async (itemId, materialName) => {
+  const loadMaterialsForCategory = async (categoryName) => {
+    const safeCategory = String(categoryName || '').trim()
+    if (!safeCategory) {
+      return []
+    }
+
+    try {
+      const materialList = cleanList(
+        await apiGet('getMaterialsByCategory', { kategori: safeCategory }),
+      )
+      setMaterialOptionsByCategory((prev) => ({ ...prev, [safeCategory]: materialList }))
+      return materialList
+    } catch (error) {
+      console.error('Gagal load bahan mengikut kategori:', error)
+      setMaterialOptionsByCategory((prev) => ({ ...prev, [safeCategory]: [] }))
+      return []
+    }
+  }
+
+  const fetchSpecs = async (itemId, materialName, categoryName = '') => {
     const key = `specs:${itemId}`
     const seq = nextSeq(key)
     const lookupName = extractMaterialParts(materialName).material || materialName
 
     let specs = []
     try {
-      specs = cleanList(await apiGet('getSpecsByMaterial', { material: lookupName }))
+      specs = cleanList(await apiGet('getSpecsByMaterial', { material: lookupName, kategori: categoryName }))
     } catch (error) {
       console.error('Gagal load spesifikasi:', error)
     }
     if (isLatest(key, seq)) updateItemById(itemId, { availableSpecs: specs })
   }
 
-  const fetchSizes = async (itemId, materialName, specificationName = '') => {
+  const fetchSizes = async (itemId, materialName, specificationName = '', categoryName = '') => {
     const key = `sizes:${itemId}`
     const seq = nextSeq(key)
     const lookupName = extractMaterialParts(materialName).material || materialName
@@ -106,6 +143,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         await apiGet('getSizesByMaterial', {
           material: lookupName,
           spesifikasi: specificationName,
+          kategori: categoryName,
         }),
       )
     } catch (error) {
@@ -114,7 +152,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     if (isLatest(key, seq)) updateItemById(itemId, { availableSizes: sizes })
   }
 
-  const fetchBalance = async (itemId, materialName, sizeName, specificationName = '') => {
+  const fetchBalance = async (itemId, materialName, sizeName, specificationName = '', categoryName = '') => {
     const key = `balance:${itemId}`
     const seq = nextSeq(key)
 
@@ -125,6 +163,7 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
         material: materialName,
         saiz: sizeName,
         spesifikasi: specificationName,
+        kategori: categoryName,
       })
       const { balance, balanceUnit, saiz } = parseBalancePayload(payload)
       if (!Number.isFinite(balance)) throw new Error('Balance format not supported')
@@ -162,8 +201,30 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     lookupTimersRef.current[itemId] = setTimeout(run, delay)
   }
 
+  const changeCategory = (itemId, nextCategory) => {
+    const cleanCategory = String(nextCategory || '').trim()
+    updateItemById(itemId, {
+      kategori: cleanCategory,
+      material: '',
+      spesifikasi: '',
+      saiz: '',
+      availableSpecs: [],
+      availableSizes: [],
+      balance: null,
+      balanceUnit: '',
+      balanceStatus: 'idle',
+    })
+
+    if (cleanCategory) {
+      loadMaterialsForCategory(cleanCategory)
+    }
+  }
+
   const changeMaterial = (itemId, value, { immediate = false } = {}) => {
     cancelLookups(itemId)
+    const currentItem = items.find((item) => item.id === itemId)
+    const categoryName = currentItem?.kategori || ''
+
     updateItemById(itemId, {
       material: value,
       spesifikasi: '',
@@ -180,9 +241,9 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     scheduleLookup(
       itemId,
       () => {
-        fetchSpecs(itemId, materialName)
-        fetchSizes(itemId, materialName, '')
-        fetchBalance(itemId, materialName, '', '')
+        fetchSpecs(itemId, materialName, categoryName)
+        fetchSizes(itemId, materialName, '', categoryName)
+        fetchBalance(itemId, materialName, '', '', categoryName)
       },
       immediate ? 0 : LOOKUP_DELAY_MS,
     )
@@ -201,15 +262,15 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
     const materialName = item.material.trim()
     if (!materialName) return
     scheduleLookup(item.id, () => {
-      fetchSizes(item.id, materialName, nextSpec)
-      fetchBalance(item.id, materialName, '', nextSpec)
+      fetchSizes(item.id, materialName, nextSpec, item.kategori)
+      fetchBalance(item.id, materialName, '', nextSpec, item.kategori)
     })
   }
 
   const changeSize = (item, nextSize) => {
     updateItemById(item.id, { saiz: nextSize })
     const materialName = item.material.trim()
-    if (materialName) scheduleLookup(item.id, () => fetchBalance(item.id, materialName, nextSize, item.spesifikasi))
+    if (materialName) scheduleLookup(item.id, () => fetchBalance(item.id, materialName, nextSize, item.spesifikasi, item.kategori))
   }
 
   const addRow = () => setItems((prev) => [...prev, createEmptyItem()])
@@ -233,13 +294,14 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
 
     const validItems = items
       .map((item) => ({
+        kategori: item.kategori.trim(),
         material: item.material.trim(),
         spesifikasi: item.spesifikasi.trim(),
         kuantiti: Number(item.kuantiti),
         unit: item.unit.trim(),
         saiz: item.saiz.trim(),
       }))
-      .filter((item) => item.material && item.kuantiti > 0)
+      .filter((item) => item.kategori && item.material && item.kuantiti > 0)
 
     if (validItems.length === 0) {
       setStatus({ type: 'error', message: 'Sila isi sekurang-kurangnya satu material dengan kuantiti yang sah.' })
@@ -359,16 +421,29 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
                 className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1.8fr)_minmax(0,1fr)_auto] md:items-start"
               >
                 <div>
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 md:hidden">BARANG</span>
-                  <MaterialCombobox
-                    value={item.material}
-                    options={materials}
-                    onChange={(value) => changeMaterial(item.id, value)}
-                    onSelect={(value) => changeMaterial(item.id, value, { immediate: true })}
-                    placeholder={isLoadingMaterials ? 'Memuat material...' : 'Pilih atau taip nama bahan'}
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 md:hidden">KATEGORI &amp; BARANG</span>
+                  <select
+                    value={item.kategori}
+                    onChange={(event) => changeCategory(item.id, event.target.value)}
+                    className={inputClass}
                     disabled={isSubmitting}
-                    inputFocus={theme.inputFocus}
-                  />
+                  >
+                    <option value="">Pilih kategori</option>
+                    {categoryOptions.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                  <div className="mt-2">
+                    <MaterialCombobox
+                      value={item.material}
+                      options={materialOptionsByCategory[item.kategori] || materials}
+                      onChange={(value) => changeMaterial(item.id, value)}
+                      onSelect={(value) => changeMaterial(item.id, value, { immediate: true })}
+                      placeholder={isLoadingMaterials ? 'Memuat material...' : item.kategori ? 'Pilih bahan dalam kategori ini' : 'Pilih kategori dulu'}
+                      disabled={isSubmitting || !item.kategori}
+                      inputFocus={theme.inputFocus}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">

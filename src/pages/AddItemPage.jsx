@@ -6,6 +6,7 @@ const ADD_ITEM_ENABLED = true
 
 function AddItemPage({ theme, stockState }) {
   const [material, setMaterial] = useState('')
+  const [kategori, setKategori] = useState('')
   const [spesifikasi, setSpesifikasi] = useState('')
   const [saiz, setSaiz] = useState('')
   const [stokAwal, setStokAwal] = useState('')
@@ -19,6 +20,12 @@ function AddItemPage({ theme, stockState }) {
     const materialName = material.trim()
     if (!materialName) {
       setStatus({ type: 'error', message: 'Nama bahan wajib diisi.' })
+      return
+    }
+
+    const categoryName = kategori.trim()
+    if (!categoryName) {
+      setStatus({ type: 'error', message: 'Kategori bahan wajib dipilih.' })
       return
     }
 
@@ -43,6 +50,7 @@ function AddItemPage({ theme, stockState }) {
         material: materialName,
         spesifikasi: spesifikasi.trim(),
         saiz: saiz.trim(),
+        kategori: categoryName,
         stokAwal: String(stokAwalValue),
         minimum: String(minimumValue),
       })
@@ -54,6 +62,7 @@ function AddItemPage({ theme, stockState }) {
 
       setStatus({ type: 'success', message: resultText || 'Item baru berjaya ditambah ke sheet.' })
       setMaterial('')
+      setKategori('')
       setSpesifikasi('')
       setSaiz('')
       setStokAwal('')
@@ -78,6 +87,17 @@ function AddItemPage({ theme, stockState }) {
             Admin
           </span>
         </div>
+
+        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Kategori</label>
+        <input
+          type="text"
+          value={kategori}
+          onChange={(event) => setKategori(event.target.value)}
+          placeholder="Contoh: Sivil"
+          className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
+          disabled={isSubmitting}
+          required
+        />
 
         <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">Nama Barang</label>
         <input
@@ -163,7 +183,7 @@ function AddItemPage({ theme, stockState }) {
         </ul>
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white/60 p-4 text-sm text-slate-600">
           <p className="font-bold uppercase tracking-wide text-slate-700">Kolum sheet</p>
-          <p className="mt-2">A = Bahan, B = Stok Awal, C = Digunakan, D = Baki, E = Minimum, F = Saiz, G = Spesifikasi</p>
+          <p className="mt-2">A = Bahan, B = Stok Awal, C = Digunakan, D = Baki, E = Minimum, F = Saiz, G = Spesifikasi, H = Kategori</p>
         </div>
       </aside>
     </div>

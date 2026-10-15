@@ -1,15 +1,18 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiGet, apiPost, cleanList, extractMaterialParts } from '../api.js'
 import MaterialCombobox from '../components/MaterialCombobox.jsx'
 import StatusMessage from '../components/StatusMessage.jsx'
 import StockList from '../components/StockList.jsx'
 
 function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
+  const [kategori, setKategori] = useState('')
   const [material, setMaterial] = useState('')
   const [spesifikasi, setSpesifikasi] = useState('')
   const [saiz, setSaiz] = useState('')
   const [availableSpecs, setAvailableSpecs] = useState([])
   const [availableSizes, setAvailableSizes] = useState([])
+  const [categoryOptions, setCategoryOptions] = useState([])
+  const [materialOptionsByCategory, setMaterialOptionsByCategory] = useState({})
   const [kuantiti, setKuantiti] = useState('')
   const [isLoadingSizes, setIsLoadingSizes] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -17,13 +20,47 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
   const specRequestRef = useRef(0)
   const sizeRequestRef = useRef(0)
 
+  useEffect(() => {
+    let isMounted = true
+    apiGet('getCategories')
+      .then((result) => {
+        if (!isMounted) return
+        setCategoryOptions(cleanList(result))
+      })
+      .catch((error) => {
+        console.error('Gagal memuat kategori:', error)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const normalizeMaterial = (value) => {
     const raw = String(value || '').trim().replace(/\s+/g, ' ')
     const materialPart = extractMaterialParts(raw).material || raw
     return materialPart.trim().replace(/\s+/g, ' ')
   }
 
-  const fetchSpecsForMaterial = async (selectedMaterial) => {
+  const loadMaterialsForCategory = async (selectedCategory) => {
+    const cleanCategory = String(selectedCategory || '').trim()
+    if (!cleanCategory) {
+      return []
+    }
+
+    try {
+      const materialsForCategory = cleanList(
+        await apiGet('getMaterialsByCategory', { kategori: cleanCategory }),
+      )
+      setMaterialOptionsByCategory((prev) => ({ ...prev, [cleanCategory]: materialsForCategory }))
+      return materialsForCategory
+    } catch (error) {
+      console.error('Gagal load bahan mengikut kategori:', error)
+      setMaterialOptionsByCategory((prev) => ({ ...prev, [cleanCategory]: [] }))
+      return []
+    }
+  }
+
+  const fetchSpecsForMaterial = async (selectedMaterial, selectedCategory = '') => {
     const cleanMaterial = String(selectedMaterial || '').trim()
     const normalizedMaterial = normalizeMaterial(cleanMaterial)
     const requestId = ++specRequestRef.current
@@ -33,19 +70,21 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
     if (!normalizedMaterial) return
 
     try {
-      const specs = cleanList(await apiGet('getSpecsByMaterial', { material: normalizedMaterial }))
+      const specs = cleanList(
+        await apiGet('getSpecsByMaterial', { material: normalizedMaterial, kategori: selectedCategory }),
+      )
       if (requestId !== specRequestRef.current) return
       setAvailableSpecs(specs)
       if (specs.length === 1) {
         setSpesifikasi(specs[0])
-        await fetchSizesForMaterial(cleanMaterial, specs[0])
+        await fetchSizesForMaterial(cleanMaterial, specs[0], selectedCategory)
       }
     } catch {
       if (requestId === specRequestRef.current) setAvailableSpecs([])
     }
   }
 
-  const fetchSizesForMaterial = async (selectedMaterial, selectedSpec = '') => {
+  const fetchSizesForMaterial = async (selectedMaterial, selectedSpec = '', selectedCategory = '') => {
     const cleanMaterial = String(selectedMaterial || '').trim()
     const normalizedMaterial = normalizeMaterial(cleanMaterial)
     const requestId = ++sizeRequestRef.current
@@ -60,6 +99,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
         await apiGet('getSizesByMaterial', {
           material: normalizedMaterial,
           spesifikasi: selectedSpec,
+          kategori: selectedCategory,
         }),
       )
       if (requestId !== sizeRequestRef.current) return
@@ -72,6 +112,19 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
     }
   }
 
+  const handleCategoryChange = (nextCategory) => {
+    const cleanCategory = String(nextCategory || '').trim()
+    setKategori(cleanCategory)
+    setMaterial('')
+    setSpesifikasi('')
+    setSaiz('')
+    setAvailableSpecs([])
+    setAvailableSizes([])
+
+    if (!cleanCategory) return
+    loadMaterialsForCategory(cleanCategory)
+  }
+
   const handleMaterialChange = (nextMaterial) => {
     const cleanMaterial = String(nextMaterial || '').trim()
     setMaterial(cleanMaterial)
@@ -81,8 +134,8 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
     setAvailableSizes([])
 
     if (!cleanMaterial) return
-    fetchSpecsForMaterial(cleanMaterial)
-    fetchSizesForMaterial(cleanMaterial)
+    fetchSpecsForMaterial(cleanMaterial, kategori)
+    fetchSizesForMaterial(cleanMaterial, '', kategori)
   }
 
   const handleSpecChange = (nextSpec) => {
@@ -92,12 +145,17 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
     setAvailableSizes([])
 
     if (material.trim()) {
-      fetchSizesForMaterial(material, cleanSpec)
+      fetchSizesForMaterial(material, cleanSpec, kategori)
     }
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+
+    if (!kategori.trim()) {
+      setStatus({ type: 'error', message: 'Kategori bahan wajib dipilih.' })
+      return
+    }
 
     if (!material.trim()) {
       setStatus({ type: 'error', message: 'Material wajib diisi.' })
@@ -125,6 +183,7 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
 
     try {
       const resultText = await apiPost({
+        kategori: kategori.trim(),
         material: material.trim(),
         spesifikasi: spesifikasi.trim(),
         saiz: saiz.trim(),
@@ -161,11 +220,24 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
           </span>
         </div>
 
+        <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">KATEGORI</label>
+        <select
+          value={kategori}
+          onChange={(event) => handleCategoryChange(event.target.value)}
+          disabled={isSubmitting}
+          className={`mb-6 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:bg-white focus:ring-4 ${theme.inputFocus}`}
+        >
+          <option value="">Pilih kategori</option>
+          {categoryOptions.map((categoryOption) => (
+            <option key={categoryOption} value={categoryOption}>{categoryOption}</option>
+          ))}
+        </select>
+
         <label className="mb-2 block text-sm font-bold uppercase tracking-wide text-slate-700">BARANG</label>
         <div className="mb-6">
           <MaterialCombobox
             value={material}
-            options={materials}
+            options={materialOptionsByCategory[kategori] || materials}
             onChange={(text) => {
               handleMaterialChange(text)
             }}
@@ -177,8 +249,8 @@ function RestockPage({ theme, materials, isLoadingMaterials, stockState }) {
                 handleMaterialChange(material)
               }
             }}
-            placeholder={isLoadingMaterials ? 'Memuat Barang...' : 'Taip atau pilih barang'}
-            disabled={isLoadingMaterials || isSubmitting}
+            placeholder={isLoadingMaterials ? 'Memuat Barang...' : kategori ? 'Taip atau pilih barang dalam kategori ini' : 'Pilih kategori dahulu'}
+            disabled={isLoadingMaterials || isSubmitting || !kategori}
             inputFocus={theme.inputFocus}
           />
         </div>
