@@ -2,38 +2,36 @@ function checkStockAlert() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stock");
   var data = sheet.getDataRange().getValues();
 
-  var message = "⚠️ STOK RENDAH:\n\n";
+  var message = "⚠️ LAPORAN STOK:\n\n";
   var alert = false;
 
   for (var i = 1; i < data.length; i++) {
-
     var bahan = data[i][0];        // Column A
-    var stok_awal = data[i][1];    // Column B
-    var digunakan = data[i][2];    // Column C
-    var baki = data[i][3];         // Column D
-    var minimum = data[i][4];      // Column E
-    // auto kira baki kalau kosong
-    if (!baki) {
+    var stok_awal = Number(data[i][1]) || 0;    // Column B
+    var digunakan = Number(data[i][2]) || 0;    // Column C
+    var baki = Number(data[i][3]) || 0;          // Column D
+    var minimum = Number(data[i][4]) || 0;       // Column E
+
+    if (!baki && (stok_awal || digunakan)) {
       baki = stok_awal - digunakan;
       sheet.getRange(i + 1, 4).setValue(baki);
     }
 
-    // check stok rendah
-    if (baki <= minimum) {
+    if (baki <= 0) {
+      message += "❌ " + bahan + "\n";
+      message += "Baki: " + baki + " | Min: " + minimum + "\n\n";
+      sheet.getRange(i + 1, 4).setBackground("#ff4d4d");
+      alert = true;
+    } else if (baki <= minimum) {
       message += "🔴 " + bahan + "\n";
       message += "Baki: " + baki + " | Min: " + minimum + "\n\n";
-
-      // highlight merah
-      sheet.getRange(i + 1, 4).setBackground("#ff4d4d");
-
+      sheet.getRange(i + 1, 4).setBackground("#ffd166");
       alert = true;
     } else {
-      // reset warna kalau ok
       sheet.getRange(i + 1, 4).setBackground("#ffffff");
     }
   }
 
-  // hantar telegram kalau ada alert
   if (alert) {
     sendTelegram(message);
   }
@@ -66,7 +64,7 @@ function splitMaterialLabel(label) {
 // ======= AUTH helpers (Supabase) =======
 var ACTION_ROLES = {
   getMaterials: 'staff', getSizesByMaterial: 'staff', getBalanceByMaterial: 'staff',
-  getStock: 'staff', getUsageHistory: 'staff', usage: 'staff', addItem: 'admin',
+  getStock: 'storekeeper', getUsageHistory: 'storekeeper', usage: 'staff', addItem: 'admin',
   restock: 'admin', telegram: 'admin'
 };
 
@@ -629,8 +627,14 @@ function doPost(e) {
 
           usageSheet.appendRow([timestamp, nama, materialName, kuantiti, unit, tujuan, targetSize || "", targetSpec || ""]);
 
-          if (baki <= 10 && baki > 0) {
-            sendTelegramAlert(materialName + (targetSize ? " (" + targetSize + ")" : "") + (targetSpec ? " - " + targetSpec : ""), baki);
+          var stockMinimum = Number(stockData[i][4]) || 0;
+          if (baki > 0 && baki <= stockMinimum) {
+            sendTelegramAlert(
+              materialName + (targetSize ? " (" + targetSize + ")" : "") + (targetSpec ? " - " + targetSpec : ""),
+              baki,
+              stockMinimum,
+              targetSpec || rowSpec
+            );
           }
 
           found = true;
@@ -704,9 +708,10 @@ function sendTelegramUsage(nama, material, kuantiti, unit, tujuan, saiz, spesifi
   }
 }
 
-function sendTelegramAlert(material, baki, spesifikasi) {
+function sendTelegramAlert(material, baki, minimum, spesifikasi) {
   var specText = spesifikasi ? "\n📄 Spesifikasi: " + spesifikasi : "";
-  var msg = "⚠️ STOCK RENDAH\nMaterial: " + material + specText + "\nBaki Tinggal: " + baki;
+  var minimumText = typeof minimum !== 'undefined' && minimum !== null ? "\nTahap Minimum: " + minimum : "";
+  var msg = "⚠️ STOCK RENDAH\nMaterial: " + material + specText + "\nBaki Tinggal: " + baki + minimumText;
 
   try {
     sendTelegram(msg);

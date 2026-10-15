@@ -33,6 +33,8 @@ There is no server of our own. The Apps Script web app is the only backend and t
 
 Styling notes: headings use the `font-display` class (Archivo Black, defined in `src/index.css` `@theme`). Theme colours come from the `theme` object, not hard-coded per page.
 
+Role access: `staff` can still submit material usage, but cannot open the inventory page or request-record page. Those pages require at least `storekeeper` access, while `restock` and `users` stay `admin`-only.
+
 Lint: `npm run lint` (ESLint with `react-hooks` v7 rules, which are strict: no writing globals in components, no sync `setState` in effects).
 
 ## Backend: Google Apps Script
@@ -88,5 +90,6 @@ A material can have several rows in `Stock`, one per size (column F).
 - Login/roles (Supabase) is in progress but not deployed: migration not yet run, backend not yet redeployed with the auth check, `AUTH_MODE` stays `off` until then. See [plans/login-supabase.md](plans/login-supabase.md) for the exact handoff steps.
 - `backend/stock.gs` changes (new `getStock`, Telegram via Script Properties, column E fix, auth check) must be deployed to Apps Script before the Stock page, Telegram page, and login work in production.
 - Telegram bot tokens that were committed in the original repos must be revoked with @BotFather.
+- Stock alerts trigger when the balance is at or below the configured minimum, and a separate Telegram message is sent when the balance reaches zero. This matches the `Stock` sheet threshold logic and helps supervisors act before shortages become critical.
 - A multi-item usage POST writes rows one at a time. If a later item fails (not found or not enough stock), earlier items are already saved.
 - The old MATERIAL-USAGE and RESTOCK sites still call the same backend.

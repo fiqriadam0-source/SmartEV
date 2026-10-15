@@ -9,8 +9,8 @@ export const PAGE_ROLES = {
   usage: 'staff',
   restock: 'admin',
   newitem: 'admin',
-  stock: 'staff',
-  telegram: 'staff',
+  stock: 'storekeeper',
+  telegram: 'storekeeper',
   users: 'admin',
 }
 

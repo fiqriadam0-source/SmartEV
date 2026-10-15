@@ -71,3 +71,18 @@ test('Usage request history includes specification details and keeps items disti
   assert.match(telegramPage, /spesifikasi|Spesifikasi/i)
   assert.match(telegramPage, /itemKey.*spesifikasi|row\.spesifikasi|row\[7\]|item\.spesifikasi/i)
 })
+
+test('Staff cannot access inventory and request-record pages', () => {
+  const permissions = fs.readFileSync(path.join(repoRoot, 'src/auth/permissions.js'), 'utf8')
+  assert.match(permissions, /stock:\s*['"]storekeeper['"]/)
+  assert.match(permissions, /telegram:\s*['"]storekeeper['"]/)
+  assert.match(permissions, /usage:\s*['"]staff['"]/)
+  assert.match(permissions, /return\s+profile\.role\s*===\s*['"]staff['\"]\s*\|\|\s*profile\.role\s*===\s*['"]admin['\"]/)
+})
+
+test('Backend notifies low stock below minimum and out-of-stock cases', () => {
+  const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
+  assert.match(backendText, /baki\s*<=\s*minimum|baki\s*>\s*0\s*&&\s*baki\s*<=\s*stockMinimum|stok\s*rendah.*minimum/i)
+  assert.match(backendText, /sendTelegramOutOfStock|STOK HABIS|❌ STOCK HABIS/i)
+  assert.match(backendText, /sendTelegramAlert\s*\([\s\S]*minimum[\s\S]*baki|baki[\s\S]*minimum[\s\S]*sendTelegramAlert/i)
+})
