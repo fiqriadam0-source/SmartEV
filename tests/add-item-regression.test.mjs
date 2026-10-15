@@ -86,3 +86,8 @@ test('Backend notifies low stock below minimum and out-of-stock cases', () => {
   assert.match(backendText, /sendTelegramOutOfStock|STOK HABIS|❌ STOCK HABIS/i)
   assert.match(backendText, /sendTelegramAlert\s*\([\s\S]*minimum[\s\S]*baki|baki[\s\S]*minimum[\s\S]*sendTelegramAlert/i)
 })
+
+test('Usage flow sends out-of-stock notification after the final stock decrement hits zero', () => {
+  const backendText = fs.readFileSync(path.join(repoRoot, 'backend/stock.gs'), 'utf8')
+  assert.match(backendText, /stokDigunakan\s*\+=\s*kuantiti;[\s\S]*baki\s*=\s*stokAwal\s*-\s*stokDigunakan;[\s\S]*if\s*\(\s*baki\s*<=\s*0\s*\)/m)
+})

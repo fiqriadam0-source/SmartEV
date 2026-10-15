@@ -628,7 +628,12 @@ function doPost(e) {
           usageSheet.appendRow([timestamp, nama, materialName, kuantiti, unit, tujuan, targetSize || "", targetSpec || ""]);
 
           var stockMinimum = Number(stockData[i][4]) || 0;
-          if (baki > 0 && baki <= stockMinimum) {
+          if (baki <= 0) {
+            sendTelegramOutOfStock(
+              materialName + (targetSize ? " (" + targetSize + ")" : "") + (targetSpec ? " - " + targetSpec : ""),
+              targetSpec || rowSpec
+            );
+          } else if (baki <= stockMinimum) {
             sendTelegramAlert(
               materialName + (targetSize ? " (" + targetSize + ")" : "") + (targetSpec ? " - " + targetSpec : ""),
               baki,
