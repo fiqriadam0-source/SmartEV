@@ -1,6 +1,6 @@
 {
-  "name": "SmartEV Stor",
-  "short_name": "SmartEV",
+  "name": "SIMS",
+  "short_name": "SIMS",
   "description": "Rekod penggunaan material, restok dan senarai stok stor.",
   "start_url": "./",
   "scope": "./",

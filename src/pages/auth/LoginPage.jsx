@@ -30,7 +30,7 @@ function LoginPage({ theme, onSwitchToSignUp }) {
       <div className={`rounded-3xl border p-6 shadow-2xl backdrop-blur-lg sm:p-8 ${theme.panel}`}>
         <div className="mb-6 text-center">
           <h2 className={`font-display text-3xl text-slate-900 ${theme.heading}`}>Log Masuk</h2>
-          <p className="mt-2 text-sm text-slate-500">SmartEV Stor &mdash; sistem pengurusan stok.</p>
+          <p className="mt-2 text-sm text-slate-500">SIMS&mdash; .</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
