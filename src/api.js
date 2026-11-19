@@ -41,7 +41,11 @@ export async function apiPost(fields) {
   if (data.session?.access_token) body.append('access_token', data.session.access_token)
 
   const response = await fetch(getApiUrl(), { method: 'POST', body })
-  return response.text()
+  const text = await response.text()
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${text || 'Permintaan gagal'}`, { cause: text })
+  }
+  return text
 }
 
 export async function apiPostJson(fields) {

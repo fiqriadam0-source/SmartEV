@@ -947,12 +947,19 @@ function debugTelegramProps() {
 function ensureRequestSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('PermohonanBarang');
-  if (!sheet) {
-    sheet = ss.insertSheet('PermohonanBarang');
-  }
+  if (!sheet) sheet = ss.insertSheet('PermohonanBarang');
+
+  var headers = ['request_id','timestamp','applicant_user_id','applicant_email','applicant_name','purpose','category','material','specification','size','quantity','unit','status','reviewed_at','reviewed_by','telegram_message_id'];
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['request_id','timestamp','applicant_user_id','applicant_email','applicant_name','purpose','category','material','specification','size','quantity','unit','status','reviewed_at','reviewed_by','telegram_message_id']);
+    sheet.appendRow(headers);
+  } else {
+    var firstRow = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
+    var missingHeader = headers.some(function(header, index) {
+      return String(firstRow[index] || '').trim() !== header;
+    });
+    if (missingHeader) sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   }
+  if (sheet.getFrozenRows() < 1) sheet.setFrozenRows(1);
   return sheet;
 }
 
@@ -1215,6 +1222,8 @@ function handleTelegramWebhook(e) {
   var separator = data.indexOf(':');
   var action = separator >= 0 ? data.slice(0, separator) : '';
   var requestId = separator >= 0 ? data.slice(separator + 1) : '';
+  answerTelegramCallback(callback.id, 'Sedang memproses permohonan...');
+
   var result = '';
   if (action === 'approve') result = approveRequest(requestId, 'Telegram Admin ' + (callback.from && callback.from.id ? callback.from.id : ''));
   else if (action === 'reject') result = rejectRequest(requestId, 'Telegram Admin ' + (callback.from && callback.from.id ? callback.from.id : ''));
@@ -1262,4 +1271,20 @@ function isTelegramGroupMember(chatId, userId) {
     console.log('isTelegramGroupMember error: ' + err.message);
     return false;
   }
+}
+
+function debugRequestWorkflow() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('PermohonanBarang');
+  var props = PropertiesService.getScriptProperties();
+  var result = {
+    requestSheetFound: !!sheet,
+    requestSheetRows: sheet ? sheet.getLastRow() : 0,
+    telegramChatConfigured: !!props.getProperty('TELEGRAM_CHAT_ID'),
+    telegramTokenConfigured: !!props.getProperty('TELEGRAM_TOKEN'),
+    authMode: props.getProperty('AUTH_MODE') || 'off',
+    deploymentUrl: ScriptApp.getService().getUrl()
+  };
+  console.log(JSON.stringify(result));
+  return result;
 }
