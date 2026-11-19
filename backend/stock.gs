@@ -465,6 +465,7 @@ function doPost(e) {
     var access_token = (e.parameter && e.parameter.access_token) || '';
     var authMode = getScriptProp('AUTH_MODE') || 'off';
     var caller = null;
+    if (access_token) caller = getCaller(access_token);
     if (authMode !== 'off') {
       caller = getCaller(access_token);
       if (!caller && authMode === 'enforce') {
@@ -1207,11 +1208,6 @@ function handleTelegramWebhook(e) {
   var chatId = callback.message && callback.message.chat ? String(callback.message.chat.id || '') : '';
   if (!allowedChat || chatId !== allowedChat) {
     answerTelegramCallback(callback.id, 'Kelulusan hanya dibenarkan dalam kumpulan admin.');
-    return 'ok';
-  }
-  var fromId = callback.from && callback.from.id ? String(callback.from.id) : '';
-  if (!isTelegramGroupMember(allowedChat, fromId)) {
-    answerTelegramCallback(callback.id, 'Anda bukan ahli kumpulan admin yang dibenarkan.');
     return 'ok';
   }
 

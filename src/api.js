@@ -46,11 +46,21 @@ export async function apiPost(fields) {
 
 export async function apiPostJson(fields) {
   const text = await apiPost(fields)
+  const cleanText = String(text || '').trim()
   try {
-    return JSON.parse(text)
-  } catch {
-    if (text.startsWith('Error:')) throw new Error(text)
-    throw new Error(text || 'Ralat memproses permintaan.')
+    const parsed = JSON.parse(cleanText)
+    if (Array.isArray(parsed)) return parsed
+    if (parsed && parsed.error) throw new Error(String(parsed.error))
+    return parsed
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      if (cleanText.startsWith('Error:') || cleanText.startsWith('❌')) {
+        throw new Error(cleanText, { cause: error })
+      }
+    } else {
+      throw error
+    }
+    throw new Error(cleanText || 'Ralat memproses permintaan.', { cause: error })
   }
 }
 
