@@ -44,6 +44,16 @@ export async function apiPost(fields) {
   return response.text()
 }
 
+export async function apiPostJson(fields) {
+  const text = await apiPost(fields)
+  try {
+    return JSON.parse(text)
+  } catch {
+    if (text.startsWith('Error:')) throw new Error(text)
+    throw new Error(text || 'Ralat memproses permintaan.')
+  }
+}
+
 async function getArray(action, errorMessage, params = {}) {
   const data = await apiGet(action, params)
   if (Array.isArray(data)) return data
@@ -60,6 +70,16 @@ export const fetchMaterialsByCategory = async (kategori) => cleanList(
 )
 export const fetchStock = () => getArray('getStock', 'Format stock tidak sah')
 export const fetchUsageHistory = () => getArray('getUsageHistory', 'Format usage history tidak sah')
+export const fetchMyRequests = () => apiPostJson({ action: 'getMyRequests' })
+export const fetchPendingRequests = () => apiPostJson({ action: 'getPendingRequests' })
+
+export async function approveUsageRequest(requestId) {
+  return apiPost({ action: 'approveRequest', request_id: requestId })
+}
+
+export async function rejectUsageRequest(requestId) {
+  return apiPost({ action: 'rejectRequest', request_id: requestId })
+}
 
 export function cleanList(data) {
   return Array.isArray(data)

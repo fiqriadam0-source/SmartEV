@@ -12,11 +12,15 @@ import RestockPage from './pages/RestockPage.jsx'
 import StockPage from './pages/StockPage.jsx'
 import TelegramPage from './pages/TelegramPage.jsx'
 import UsagePage from './pages/UsagePage.jsx'
+import MyRequestsPage from './pages/MyRequestsPage.jsx'
+import ApprovalsPage from './pages/ApprovalsPage.jsx'
 import UsersPage from './pages/UsersPage.jsx'
 import { THEMES } from './themes.js'
 
 const PAGES = [
   { id: 'usage', label: 'PERMOHONAN BARANG', icon: '🧰' },
+  { id: 'approvals', label: 'KELULUSAN BARANG', icon: '✅' },
+  { id: 'myrequests', label: 'PERMOHONAN SAYA', icon: '📩' },
   { id: 'restock', label: 'RESTOK BARANG', icon: '📦' },
   { id: 'newitem', label: 'TAMBAH BARANG', icon: '➕' },
   { id: 'stock', label: 'INVENTORI BARANG', icon: '📋' },
@@ -247,6 +251,14 @@ function App() {
             defaultNama={profile.full_name}
           />
         </div>
+        <div hidden={currentPage !== 'myrequests'}>
+          <MyRequestsPage theme={activeTheme} />
+        </div>
+        {profile.role === 'admin' && (
+          <div hidden={currentPage !== 'approvals'}>
+            <ApprovalsPage theme={activeTheme} />
+          </div>
+        )}
         <div hidden={currentPage !== 'restock'}>
           <RestockPage
             theme={activeTheme}
@@ -267,6 +279,16 @@ function App() {
         {hasRole(profile, PAGE_ROLES.users) && (
           <div hidden={currentPage !== 'users'}>
             <UsersPage theme={activeTheme} />
+          </div>
+        )}
+        {hasRole(profile, PAGE_ROLES.requester) && (
+          <div hidden={currentPage !== 'myrequests'}>
+            <MyRequestsPage theme={activeTheme} />
+          </div>
+        )}
+        {hasRole(profile, PAGE_ROLES.approver) && (
+          <div hidden={currentPage !== 'approvals'}>
+            <ApprovalsPage theme={activeTheme} />
           </div>
         )}
 

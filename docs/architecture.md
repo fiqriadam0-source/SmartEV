@@ -93,3 +93,8 @@ A material can have several rows in `Stock`, one per size (column F).
 - Stock alerts trigger when the balance is at or below the configured minimum, and a separate Telegram message is sent when the balance reaches zero. This matches the `Stock` sheet threshold logic and helps supervisors act before shortages become critical.
 - A multi-item usage POST writes rows one at a time. If a later item fails (not found or not enough stock), earlier items are already saved.
 - The old MATERIAL-USAGE and RESTOCK sites still call the same backend.
+
+## Implementation notes
+
+- Material approvals use a `PermohonanBarang` sheet and keep stock/`MaterialUsage` unchanged until admin approval. The sheet is created automatically on the first request.
+- Telegram approval callbacks are accepted only for `TELEGRAM_CHAT_ID`, so buttons work for members of the configured admin group. Deploy and set the bot webhook to the Apps Script `/exec` URL.

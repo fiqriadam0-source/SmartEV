@@ -338,13 +338,14 @@ function UsagePage({ theme, materials, isLoadingMaterials, onSubmitted, defaultN
 
     try {
       const result = await apiPost({
+        action: 'createUsageRequest',
         nama: nama.trim(),
         tujuan: tujuan.trim(),
         items: JSON.stringify(validItems),
       })
 
-      if (result.includes('Berjaya') || result.includes('Success')) {
-        setStatus({ type: 'success', message: result || 'Rekod penggunaan material berjaya dihantar.' })
+      if (result.includes('dihantar') || result.includes('menunggu') || result.includes('Berjaya')) {
+        setStatus({ type: 'success', message: result || 'Permohonan dihantar dan menunggu kelulusan admin.' })
         setNama('')
         setTujuan('')
         items.forEach((item) => cancelLookups(item.id))

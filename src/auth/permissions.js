@@ -11,6 +11,8 @@ export const PAGE_ROLES = {
   newitem: 'admin',
   stock: 'storekeeper',
   telegram: 'storekeeper',
+  myrequests: 'staff',
+  approvals: 'admin',
   users: 'admin',
 }
 
@@ -21,7 +23,7 @@ export function canAccessPage(profile, pageId) {
     return profile.role === 'staff' || profile.role === 'admin'
   }
 
-  if (pageId === 'restock' || pageId === 'newitem') {
+  if (pageId === 'restock' || pageId === 'newitem' || pageId === 'approvals') {
     return profile.role === 'admin'
   }
 
