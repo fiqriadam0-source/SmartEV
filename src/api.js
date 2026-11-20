@@ -23,10 +23,19 @@ export async function apiGet(action, params = {}) {
 
   const response = await fetch(url)
   const text = await response.text()
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${text.slice(0, 200) || 'Permintaan gagal'}`)
+  }
+
+  const trimmedText = text.trim()
+  if (/^<!doctype html>|^<html/i.test(trimmedText)) {
+    throw new Error('Backend Apps Script tidak mengembalikan JSON. Semak tindakan Apps Script telah di-deploy atau deployment masih lama.')
+  }
+
   try {
-    return JSON.parse(text)
+    return JSON.parse(trimmedText)
   } catch {
-    return text
+    return trimmedText
   }
 }
 

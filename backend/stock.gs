@@ -40,6 +40,29 @@ function normalizeText(value) {
   return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+function requestTimestampToIso(value) {
+  if (value instanceof Date) {
+    var dateMillis = value.getTime();
+    if (!isNaN(dateMillis)) {
+      return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ssXXX");
+    }
+    return '';
+  }
+
+  var raw = String(value || '').trim();
+  if (!raw) return '';
+
+  var parsed = new Date(raw);
+  var millis = parsed.getTime();
+  if (isNaN(millis)) return '';
+
+  try {
+    return parsed.toISOString();
+  } catch (err) {
+    return '';
+  }
+}
+
 function splitMaterialLabel(label) {
   var raw = String(label || "").trim();
   if (!raw) {
@@ -1049,13 +1072,7 @@ function getRequestRows() {
   var rows = [];
   for (var i = 1; i < data.length; i++) {
     var timestampValue = data[i][1];
-    var timestamp = '';
-    if (timestampValue instanceof Date && !isNaN(timestampValue.getTime())) {
-      timestamp = timestampValue.toISOString();
-    } else if (timestampValue) {
-      var parsedTimestamp = new Date(timestampValue);
-      if (!isNaN(parsedTimestamp.getTime())) timestamp = parsedTimestamp.toISOString();
-    }
+    var timestamp = requestTimestampToIso(timestampValue);
     rows.push({
       row: i + 1,
       request_id: String(data[i][0] || ''),
