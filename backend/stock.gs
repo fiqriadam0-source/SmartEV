@@ -1262,9 +1262,12 @@ function handleTelegramWebhook(e) {
 function setupTelegramWebhook() {
   var props = PropertiesService.getScriptProperties();
   var token = props.getProperty('TELEGRAM_TOKEN');
+  var url = props.getProperty('TELEGRAM_WEBHOOK_URL');
   if (!token) throw new Error('TELEGRAM_TOKEN belum ditetapkan dalam Script Properties');
-  var url = ScriptApp.getService().getUrl();
-  if (!url) throw new Error('Deploy Apps Script dahulu sebelum menetapkan webhook');
+  if (!url) throw new Error('TELEGRAM_WEBHOOK_URL belum ditetapkan. Isi dengan URL /exec deployment baharu.');
+  url = String(url).trim();
+  if (url.indexOf('/dev') >= 0) throw new Error('URL /dev tidak boleh digunakan sebagai webhook. Gunakan URL /exec.');
+  if (url.indexOf('/exec') < 0) throw new Error('TELEGRAM_WEBHOOK_URL mesti mengandungi /exec.');
 
   var response = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/setWebhook', {
     method: 'post',
@@ -1277,39 +1280,29 @@ function setupTelegramWebhook() {
   return result;
 }
 
-function isTelegramGroupMember(chatId, userId) {
+function getTelegramWebhookInfo() {
   var props = PropertiesService.getScriptProperties();
   var token = props.getProperty('TELEGRAM_TOKEN');
-  if (!token || !chatId || !userId) return false;
-  try {
-    var response = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/getChatMember', {
-      method: 'post',
-      contentType: 'application/json',
-      payload: JSON.stringify({ chat_id: chatId, user_id: userId }),
-      muteHttpExceptions: true
-    });
-    var result = JSON.parse(response.getContentText());
-    if (!result.ok || !result.result) return false;
-    var status = result.result.status;
-    return status === 'creator' || status === 'administrator' || status === 'member' || status === 'restricted';
-  } catch (err) {
-    console.log('isTelegramGroupMember error: ' + err.message);
-    return false;
-  }
+  if (!token) throw new Error('TELEGRAM_TOKEN belum ditetapkan dalam Script Properties');
+  var response = UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/getWebhookInfo', {
+    muteHttpExceptions: true
+  });
+  var result = JSON.parse(response.getContentText());
+  console.log(JSON.stringify(result));
+  return result;
 }
 
-function debugRequestWorkflow() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('PermohonanBarang');
+function debugWorkflow() {
   var props = PropertiesService.getScriptProperties();
+  var sheet = ensureRequestSheet();
   var result = {
     requestSheetFound: !!sheet,
     requestSheetRows: sheet ? sheet.getLastRow() : 0,
     telegramChatConfigured: !!props.getProperty('TELEGRAM_CHAT_ID'),
     telegramTokenConfigured: !!props.getProperty('TELEGRAM_TOKEN'),
     authMode: props.getProperty('AUTH_MODE') || 'off',
-    deploymentUrl: ScriptApp.getService().getUrl()
+    editorUrl: ScriptApp.getService().getUrl(),
+    telegramWebhookUrl: props.getProperty('TELEGRAM_WEBHOOK_URL') || ''
   };
-  console.log(JSON.stringify(result));
-  return result;
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
 }
