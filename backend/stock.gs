@@ -1048,10 +1048,18 @@ function getRequestRows() {
   var data = sheet.getDataRange().getValues();
   var rows = [];
   for (var i = 1; i < data.length; i++) {
+    var timestampValue = data[i][1];
+    var timestamp = '';
+    if (timestampValue instanceof Date && !isNaN(timestampValue.getTime())) {
+      timestamp = timestampValue.toISOString();
+    } else if (timestampValue) {
+      var parsedTimestamp = new Date(timestampValue);
+      if (!isNaN(parsedTimestamp.getTime())) timestamp = parsedTimestamp.toISOString();
+    }
     rows.push({
       row: i + 1,
       request_id: String(data[i][0] || ''),
-      timestamp: data[i][1] ? new Date(data[i][1]).toISOString() : '',
+      timestamp: timestamp,
       applicant_user_id: String(data[i][2] || ''),
       applicant_email: String(data[i][3] || ''),
       applicant_name: String(data[i][4] || ''),

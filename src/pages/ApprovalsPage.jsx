@@ -3,6 +3,12 @@ import { approveUsageRequest, fetchPendingRequests, rejectUsageRequest } from '.
 import { useRemoteData } from '../hooks/useRemoteData.js'
 import StatusMessage from '../components/StatusMessage.jsx'
 
+function formatRequestTimestamp(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('ms-MY')
+}
+
 function ApprovalsPage({ theme }) {
   const requests = useRemoteData(fetchPendingRequests, [])
   const [busyId, setBusyId] = useState('')
@@ -59,7 +65,7 @@ function ApprovalsPage({ theme }) {
                   <p className="mt-1 font-bold text-slate-900">{request.applicant_name || '-'}</p>
                   <p className="text-xs text-slate-500">{request.applicant_email || '-'}</p>
                 </div>
-                <p className="text-xs text-slate-500">{request.timestamp ? new Date(request.timestamp).toLocaleString('ms-MY') : '-'}</p>
+                <p className="text-xs text-slate-500">{formatRequestTimestamp(request.timestamp)}</p>
               </div>
               <p className="mt-3 text-sm text-slate-600"><span className="font-bold text-slate-800">Tujuan:</span> {request.purpose || '-'}</p>
               <div className="mt-3 space-y-2 rounded-xl bg-slate-50 p-3">

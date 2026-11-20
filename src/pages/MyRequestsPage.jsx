@@ -2,6 +2,12 @@ import { useMemo } from 'react'
 import { fetchMyRequests } from '../api.js'
 import { useRemoteData } from '../hooks/useRemoteData.js'
 
+function formatRequestTimestamp(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('ms-MY')
+}
+
 function MyRequestsPage({ theme }) {
   const requests = useRemoteData(fetchMyRequests, [])
 
@@ -46,7 +52,7 @@ function MyRequestsPage({ theme }) {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{request.request_id}</p>
-                  <p className="mt-1 text-sm text-slate-600">{request.timestamp ? new Date(request.timestamp).toLocaleString('ms-MY') : '-'}</p>
+                  <p className="mt-1 text-sm text-slate-600">{formatRequestTimestamp(request.timestamp)}</p>
                 </div>
                 <span className={`rounded-full border px-3 py-1 text-xs font-bold ${statusStyle(request.status)}`}>
                   {statusLabel(request.status)}
