@@ -18,14 +18,20 @@ import UsersPage from './pages/UsersPage.jsx'
 import { THEMES } from './themes.js'
 
 const PAGES = [
-  { id: 'usage', label: 'PERMOHONAN BARANG', icon: '🧰' },
-  { id: 'approvals', label: 'KELULUSAN BARANG', icon: '✅' },
-  { id: 'myrequests', label: 'PERMOHONAN SAYA', icon: '📩' },
-  { id: 'restock', label: 'RESTOK BARANG', icon: '📦' },
-  { id: 'newitem', label: 'TAMBAH BARANG', icon: '➕' },
-  { id: 'stock', label: 'INVENTORI BARANG', icon: '📋' },
-  { id: 'telegram', label: 'REKOD PERMOHONAN', icon: '🕘' },
-  { id: 'users', label: 'PENGURUSAN PENGGUNA', icon: '👤' },
+  { id: 'usage', label: 'PERMOHONAN BARANG', icon: '🧰', category: 'Permohonan & Kelulusan' },
+  { id: 'approvals', label: 'KELULUSAN BARANG', icon: '✅', category: 'Permohonan & Kelulusan' },
+  { id: 'myrequests', label: 'PERMOHONAN SAYA', icon: '📩', category: 'Permohonan & Kelulusan' },
+  { id: 'telegram', label: 'REKOD PERMOHONAN', icon: '🕘', category: 'Permohonan & Kelulusan' },
+  { id: 'restock', label: 'RESTOK BARANG', icon: '📦', category: 'Pengurusan Inventori' },
+  { id: 'newitem', label: 'TAMBAH BARANG', icon: '➕', category: 'Pengurusan Inventori' },
+  { id: 'stock', label: 'INVENTORI BARANG', icon: '📋', category: 'Pengurusan Inventori' },
+  { id: 'users', label: 'PENGURUSAN PENGGUNA', icon: '👤', category: 'Sistem' },
+]
+
+const MENU_CATEGORIES = [
+  'Permohonan & Kelulusan',
+  'Pengurusan Inventori',
+  'Sistem',
 ]
 
 const ROLE_LABEL = { staff: 'Staff', storekeeper: 'Storekeeper', admin: 'Admin' }
@@ -169,33 +175,55 @@ function App() {
             </button>
 
             {isMenuOpen && (
-              <nav className="absolute right-0 top-12 z-[100] w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20">
+              <nav className="absolute right-0 top-12 z-[100] w-[calc(100vw-2rem)] max-w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 sm:w-72">
                 <div className="border-b border-slate-100 px-4 py-3">
                   <p className="truncate text-sm font-bold text-slate-900">{profile.full_name || profile.email}</p>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{ROLE_LABEL[profile.role] ?? profile.role}</p>
                 </div>
-                {visiblePages.map((page) => (
+
+                <div className="max-h-[calc(100vh-10rem)] overflow-y-auto px-2 py-2">
+                  {MENU_CATEGORIES.map((category) => {
+                    const categoryPages = visiblePages.filter((page) => page.category === category)
+                    if (categoryPages.length === 0) return null
+
+                    return (
+                      <section key={category} className="mb-2 last:mb-0">
+                        <h3 className="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                          {category}
+                        </h3>
+                        <div className="space-y-1">
+                          {categoryPages.map((page) => (
+                            <button
+                              key={page.id}
+                              type="button"
+                              onClick={() => changePage(page.id)}
+                              aria-current={currentPage === page.id ? 'page' : undefined}
+                              className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition active:scale-[0.99] ${
+                                currentPage === page.id
+                                  ? 'bg-slate-100 text-slate-900'
+                                  : 'text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-lg">
+                                {page.icon}
+                              </span>
+                              <span className="leading-5">{page.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </section>
+                    )
+                  })}
+
                   <button
-                    key={page.id}
                     type="button"
-                    onClick={() => changePage(page.id)}
-                    aria-current={currentPage === page.id ? 'page' : undefined}
-                    className={`flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-semibold transition hover:bg-slate-50 ${
-                      currentPage === page.id ? 'bg-slate-100 text-slate-900' : 'text-slate-700'
-                    }`}
+                    onClick={signOut}
+                    className="mt-3 flex min-h-12 w-full items-center gap-3 border-t border-slate-100 px-3 pt-3 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50 active:scale-[0.99]"
                   >
-                    <span className="text-lg">{page.icon}</span>
-                    {page.label}
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-lg">🚪</span>
+                    Log Keluar
                   </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={signOut}
-                  className="flex w-full items-center gap-3 border-t border-slate-100 px-4 py-3.5 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
-                >
-                  <span className="text-lg">🚪</span>
-                  Log Keluar
-                </button>
+                </div>
               </nav>
             )}
           </div>
